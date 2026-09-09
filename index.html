@@ -344,129 +344,103 @@ th{
     }
 }
 
-/* PRINT */
+/* PRINT - EXACT A5 PASSBOOK FORMAT */
 #printArea{
     display:none;
 }
 
 @media print{
+    @page{
+        size:148mm 210mm;
+        margin:0;
+    }
+
+    html, body{
+        width:148mm!important;
+        height:210mm!important;
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+    }
+
     body *{
         visibility:hidden!important;
     }
+
     #printArea,
     #printArea *{
         visibility:visible!important;
     }
+
     #printArea{
         display:block!important;
-        position:absolute;
-        left:0;
-        top:0;
-        width:100%;
-        background:#fff;
+        position:absolute!important;
+        left:0!important;
+        top:0!important;
+        width:148mm!important;
+        height:210mm!important;
+        margin:0!important;
+        padding:0!important;
+        overflow:hidden!important;
+        background:#fff!important;
     }
-    @page{
-        size:A4;
-        margin:10mm;
-    }
-}
 
-.passbook-print{
-    width:100%;
-    max-width:510px;
-    margin:0 auto;
-    padding:0;
-    font-family:Arial,Helvetica,sans-serif;
-    color:#000;
-    font-size:12px;
-    line-height:1.28;
-}
-.print-header{
-    text-align:left;
-    border:0;
-    padding:0;
-    margin:0 0 17px 0;
-}
-.print-header h2,
-.print-header h3{
-    margin:0;
-    padding:0;
-    font-size:12px;
-    font-weight:400;
-}
-.print-header h2{
-    text-align:left;
-}
-.print-header h3{
-    text-align:left;
-}
-.print-header p{
-    margin:0;
-    padding:0;
-    font-size:12px;
-    line-height:1.32;
-}
-.print-section-title{
-    display:none;
-}
-.print-table{
-    width:100%;
-    border-collapse:collapse;
-    margin:0;
-}
-.print-table td{
-    border:0;
-    padding:0;
-    font-size:12px;
-    line-height:1.3;
-    vertical-align:top;
-}
-.print-table .label{
-    width:auto;
-    font-weight:400;
-}
-.print-row-spacer td{
-    height:12px;
-}
-.print-name{
-    font-weight:400;
-    font-size:12px;
-    margin:0;
-}
-.print-address{
-    white-space:pre-line;
-}
-.print-footer{
-    border:0;
-    margin-top:3px;
-    padding:0;
-    text-align:left;
-    font-size:12px;
-    line-height:1.35;
-}
-.print-footer p{
-    margin:0;
-    padding:0;
-}
-.print-buttons{text-align:center;margin:15px 0}
-@media print{
     .passbook-print{
-        max-width:510px;
-        width:510px;
-        margin:0 auto;
-        font-size:12px;
+        position:relative!important;
+        width:148mm!important;
+        height:210mm!important;
+        margin:0!important;
+        padding:0!important;
+        box-sizing:border-box!important;
+        font-family:Arial,Helvetica,sans-serif!important;
+        font-size:11px!important;
+        line-height:11px!important;
+        color:#000!important;
+        background:#fff!important;
+        overflow:hidden!important;
     }
-    .print-table td{font-size:12px;}
-    .print-header p,
-    .print-header h2,
-    .print-header h3,
+
+    .passbook-print .p-line{
+        position:absolute!important;
+        margin:0!important;
+        padding:0!important;
+        font-family:Arial,Helvetica,sans-serif!important;
+        font-size:11px!important;
+        line-height:11px!important;
+        font-weight:400!important;
+        white-space:nowrap!important;
+    }
+
+    .passbook-print .p-wrap{
+        white-space:normal!important;
+    }
+
+    .passbook-print .p-x1{left:15.03mm!important;}
+    .passbook-print .p-x2{left:8.40mm!important;}
+    .passbook-print .p-x3{left:15.03mm!important;}
+
+    .print-header,
+    .print-table,
     .print-footer,
-    .print-name{font-size:12px;}
-}
-.print-buttons{text-align:center;margin:15px 0}
-@media print{
-    .passbook-print{max-width:none;width:100%;}
-    .print-table td{font-size:11px;}
+    .print-section-title{
+        display:contents!important;
+        border:0!important;
+        margin:0!important;
+        padding:0!important;
+    }
+
+    .print-table tr,
+    .print-table td{
+        display:contents!important;
+        border:0!important;
+        margin:0!important;
+        padding:0!important;
+    }
+
+    .print-name{
+        font-weight:400!important;
+        font-size:11px!important;
+    }
 }
 
 @media(max-width:800px){
@@ -2874,23 +2848,16 @@ function printAddressLines(value){
 
 function renderPrint(customer){
 
+    const esc = value => escapeHTML(String(value ?? ""));
+
     const maskedAadhaar =
-        customer.aadhaar || "XXXXXXXX";
+        normalizeMaskedAadhaar(customer.aadhaar || "") || "XXXXXXXX";
 
-    const branchName =
-        customer.branchName || "";
-
-    const branchAddress =
-        customer.branchAddress || "";
-
-    const branchPhone =
-        customer.branchPhone || "";
-
-    const tollFree =
-        customer.tollFree || "";
-
-    const nodalOfficer =
-        customer.nodalOfficer || "";
+    const branchName = customer.branchName || "";
+    const branchAddress = customer.branchAddress || "";
+    const branchPhone = customer.branchPhone || "";
+    const tollFree = customer.tollFree || "18001802222/18001032222";
+    const nodalOfficer = customer.nodalOfficer || "01123716185";
 
     const accountOpenDate =
         formatPrintDate(customer.accountOpenDate);
@@ -2898,127 +2865,118 @@ function renderPrint(customer){
     const issueDate =
         formatPrintDate(customer.issueDate);
 
-    $("printArea").innerHTML = `
+    const address =
+        String(customer.address || "")
+            .replace(/\r/g,"")
+            .split("\n")
+            .map(x => x.trim())
+            .filter(Boolean);
 
+    const line = (cls, top, content) =>
+        `<div class="p-line ${cls}" style="top:${top}pt">${content}</div>`;
+
+    const x1 = "p-x1";
+    const x2 = "p-x2";
+
+    const address1 = address[0] || "";
+    const address2 = address[1] || "";
+    const address3 = address[2] || "";
+
+    $("printArea").innerHTML = `
         <div class="passbook-print">
 
-            <div class="print-header">
+            ${line(x1, 82.7, `BO: ${esc(branchName)}`)}
 
-                <p>BO: ${escapeHTML(branchName)}</p>
+            ${line(x2, 93.2,
+                `${esc(branchAddress)}${branchPhone ? ` ( Ph:${esc(branchPhone)}-` : ""}`
+            )}
 
-                <p>
-                    ${escapeHTML(branchAddress)}
-                    ${branchPhone ? ` ( Ph:${escapeHTML(branchPhone)} )` : ""}
-                </p>
+            ${branchPhone
+                ? line(x2, 104.5, `${esc(branchPhone)} )`)
+                : ""
+            }
 
-                <p>&nbsp;</p>
+            ${line(x1, 125.5,
+                `MICR Code: ${esc(customer.micrCode || "")}`
+            )}
 
-                <p>
-                    MICR Code: ${escapeHTML(customer.micrCode || "")}
-                </p>
+            ${line(x1, 136.7,
+                `IFSC Code: ${esc(customer.ifscCode || "")}`
+            )}
 
-                <p>
-                    IFSC Code: ${escapeHTML(customer.ifscCode || "")}
-                </p>
+            ${line(x2, 157.7,
+                `*Contact: Toll Free-${esc(tollFree)}, Tolled-`
+            )}
 
-                <p>&nbsp;</p>
+            ${line(x2, 168.2,
+                `01202490000*`
+            )}
 
-                <p>
-                    *Contact: Toll Free-${escapeHTML(tollFree || "18001802222/18001032222")},
-                    Tolled-01202490000*
-                </p>
+            ${line(x2, 179.5,
+                `*Principal Nodal Officer: Phn-${esc(nodalOfficer)}`
+            )}
 
-                <p>
-                    *Principal Nodal Officer: Phn-${escapeHTML(nodalOfficer || "01123716185")}
-                </p>
+            ${line(x1, 200.5,
+                `Mode of Operation : ${esc(customer.modeOfOperation || "")}`
+            )}
 
-            </div>
+            ${line(x1, 211.7,
+                `Customer ID : ${esc(customer.customerNo || "")}`
+            )}
 
+            ${line(x1, 222.2,
+                `Aadhar No.: ${esc(maskedAadhaar)}`
+            )}
 
-            <table class="print-table">
+            ${line(x1, 232.7,
+                `Account No. : ${esc(customer.accountNo || "")}`
+            )}
 
-                <tr>
-                    <td>
-                        Mode of Operation :&nbsp; ${escapeHTML(customer.modeOfOperation || "")}
-                    </td>
-                </tr>
+            ${line(x1, 244.0,
+                `${esc(customer.customerName || "")}`
+            )}
 
-                <tr>
-                    <td>
-                        Customer ID :&nbsp; ${escapeHTML(customer.customerNo || "")}
-                    </td>
-                </tr>
+            ${line(x1, 254.5,
+                `Account Open Date : ${esc(accountOpenDate)}`
+            )}
 
-                <tr>
-                    <td>
-                        Aadhar No.:&nbsp; ${escapeHTML(maskedAadhaar)}
-                    </td>
-                </tr>
+            ${line(x1, 265.0,
+                `${esc(customer.relation || "")}`
+            )}
 
-                <tr>
-                    <td>
-                        Account No. :&nbsp; ${escapeHTML(customer.accountNo || "")}
-                    </td>
-                </tr>
+            ${line(x1, 275.5,
+                `${esc(address1)}`
+            )}
 
-                <tr>
-                    <td class="print-name">
-                        ${escapeHTML(customer.customerName || "")}
-                    </td>
-                </tr>
+            ${line(x1, 286.7,
+                `${esc(address2)}`
+            )}
 
-                <tr>
-                    <td>
-                        Account Open Date :&nbsp; ${escapeHTML(accountOpenDate)}
-                    </td>
-                </tr>
+            ${line(x1, 297.2,
+                `${esc(address3)}`
+            )}
 
-                <tr>
-                    <td>
-                        ${escapeHTML(customer.relation || "")}
-                    </td>
-                </tr>
+            ${line(x1, 307.7,
+                `Nomination Registered at Sl.No. :`
+            )}
 
-                <tr>
-                    <td class="print-address">
-                        ${printAddressLines(customer.address || "")}
-                    </td>
-                </tr>
+            ${line(x1, 319.0,
+                `Date of Issue : ${esc(issueDate)}`
+            )}
 
-                <tr>
-                    <td>
-                        Nomination Registered at Sl. No.:
-                        ${escapeHTML(customer.nomination || "")}
-                    </td>
-                </tr>
+            ${line(x2, 329.5,
+                `Each depositor is insured by DICGC upto amaximum`
+            )}
 
-                <tr>
-                    <td>
-                        Date of Issue :&nbsp; ${escapeHTML(issueDate)}
-                    </td>
-                </tr>
+            ${line(x2, 340.0,
+                `Rs. 5.00lac`
+            )}
 
-            </table>
-
-
-            <div class="print-footer">
-
-                <p>
-                    Each depositor is insured by DICGC upto a maximum
-                </p>
-
-                <p>
-                    Rs. 5.00lac
-                </p>
-
-                <p>
-                    subject to change from time to time. (T&amp;C applicable)
-                </p>
-
-            </div>
+            ${line(x2, 351.2,
+                `subject to change from time to time. (T&C applicable)`
+            )}
 
         </div>
-
     `;
 }
 
