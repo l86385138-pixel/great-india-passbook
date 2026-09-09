@@ -349,13 +349,13 @@ th{
 
 @media print{
     @page{
-        size:210mm 297mm;
+        size:A4 portrait;
         margin:0;
     }
 
     html, body{
         width:210mm!important;
-        height:297mm!important;
+        min-height:297mm!important;
         margin:0!important;
         padding:0!important;
         background:#fff!important;
@@ -370,99 +370,65 @@ th{
         left:0!important;
         top:0!important;
         width:210mm!important;
-        height:297mm!important;
+        min-height:297mm!important;
         margin:0!important;
         padding:0!important;
-        overflow:hidden!important;
-        background:#fff!important;
-    }
-
-    .passbook-print{
-        position:relative!important;
-        width:210mm!important;
-        height:297mm!important;
-        margin:0!important;
-        padding:0!important;
-        box-sizing:border-box!important;
-        font-family:Arial,Helvetica,sans-serif!important;
-        font-size:11.5pt!important;
-        line-height:1.18!important;
-        color:#000!important;
         background:#fff!important;
         overflow:hidden!important;
     }
 
-    .passbook-print .p-header{
-        position:absolute!important;
-        left:8mm!important;
-        top:10mm!important;
-        width:194mm!important;
-        height:8mm!important;
-        border:0!important;
-        background:#20252b!important;
-        color:#fff!important;
-        display:flex!important;
-        align-items:center!important;
-        justify-content:space-between!important;
-        padding:0 3mm!important;
-        box-sizing:border-box!important;
-        font-size:11pt!important;
-        font-weight:700!important;
-        white-space:nowrap!important;
-    }
-
-    .passbook-print .p-subtitle{
-        position:absolute!important;
-        left:8mm!important;
-        width:194mm!important;
-        text-align:center!important;
-        font-size:12pt!important;
-        font-weight:600!important;
-        line-height:1.2!important;
-        white-space:nowrap!important;
-    }
-    .passbook-print .p-subtitle1{top:21mm!important;}
-    .passbook-print .p-subtitle2{top:27mm!important; font-weight:500!important;}
-
-    .passbook-print .p-box{
-        position:absolute!important;
-        left:8mm!important;
-        top:37mm!important;
-        width:194mm!important;
-        height:250mm!important;
-        border:0.35mm solid #20252b!important;
-        box-sizing:border-box!important;
-        background:#fff!important;
-    }
-
-    .passbook-print .p-line{
-        position:absolute!important;
-        margin:0!important;
+    /* Exact layout based on uploaded 766331.htm:
+       body margin-left:3%, margin-right:45%,
+       sans-serif, 11px, line-height:1.3,
+       with seven initial <br> lines. */
+    .source-pnb-format{
+        width:auto!important;
+        margin-left:3%!important;
+        margin-right:45%!important;
         padding:0!important;
-        font-family:Arial,Helvetica,sans-serif!important;
-        font-size:11.5pt!important;
-        line-height:1.15!important;
+        font-family:sans-serif!important;
+        line-height:1.3!important;
+        font-size:11px!important;
         font-weight:400!important;
         color:#000!important;
+        background:#fff!important;
+        box-sizing:border-box!important;
+    }
+
+    .source-pnb-format .m-l{
+        margin-left:40px!important;
+    }
+
+    .source-pnb-format .m-l-15{
+        margin-left:15px!important;
+    }
+
+    .source-pnb-format .top-space{
+        height:91px!important;
+        line-height:1.3!important;
+    }
+
+    .source-pnb-format .p-line{
+        margin:0!important;
+        padding:0!important;
+        font:inherit!important;
         white-space:nowrap!important;
-        z-index:2!important;
     }
 
-    .passbook-print .p-x{left:14.5mm!important;}
-    .passbook-print .p-x-contact{left:14.5mm!important;}
-    .passbook-print .p-x-dicgc{left:14.5mm!important;}
-
-    .print-header,.print-table,.print-footer,.print-section-title{
-        display:contents!important;
-        border:0!important;
-        margin:0!important;
-        padding:0!important;
+    .source-pnb-format .p-gap{
+        height:22px!important;
+        line-height:1.3!important;
     }
-    .print-table tr,.print-table td{
-        display:contents!important;
-        border:0!important;
+
+    .source-pnb-format .p-small-gap{
+        height:11px!important;
+        line-height:1.3!important;
+    }
+
+    .source-pnb-format .p-address{
         margin:0!important;
         padding:0!important;
+        white-space:nowrap!important;
     }
 }
 </style>
@@ -2854,87 +2820,150 @@ function renderPrint(customer){
     const branchName = customer.branchName || "";
     const branchAddress = customer.branchAddress || "";
     const branchPhone = customer.branchPhone || "";
-    const tollFree = customer.tollFree || "18001802222/18001032222";
-    const nodalOfficer = customer.nodalOfficer || "01123716185";
 
-    const accountOpenDate = formatPrintDate(customer.accountOpenDate);
-    const issueDate = formatPrintDate(customer.issueDate);
+    const tollFree =
+        customer.tollFree || "18001802222/18001032222";
 
-    const address = String(customer.address || "")
-        .replace(/\r/g, "")
-        .split("\n")
-        .map(x => x.trim())
-        .filter(Boolean);
+    const nodalOfficer =
+        customer.nodalOfficer || "01123716185";
 
-    const line = (top, content, cls="p-x") =>
-        `<div class="p-line ${cls}" style="top:${top}mm">${content}</div>`;
+    const accountOpenDate =
+        formatPrintDate(customer.accountOpenDate);
+
+    const issueDate =
+        formatPrintDate(customer.issueDate);
+
+    /*
+      The uploaded 766331.htm uses:
+      - body margin-right:45%
+      - body margin-left:3%
+      - font-size:11px
+      - line-height:1.3
+      - seven <br> lines before BO
+      - m-l = 40px
+      - m-l-15 = 15px
+
+      The print HTML below deliberately keeps the same flow/layout
+      instead of using a new absolute-position design.
+    */
+
+    const address =
+        String(customer.address || "")
+            .replace(/\r/g, "")
+            .split("\n")
+            .map(x => x.trim())
+            .filter(Boolean);
 
     const address1 = address[0] || "";
     const address2 = address[1] || "";
     const address3 = address[2] || "";
 
-    // Keep the branch phone in the same visual two-part format as the sample:
-    // ( Ph:09264- 092640 )
-    const phoneParts = String(branchPhone).split("-");
-    const phoneFirst = phoneParts.length > 1
-        ? phoneParts.slice(0, -1).join("-") + "-"
-        : String(branchPhone);
-    const phoneLast = phoneParts.length > 1
-        ? phoneParts[phoneParts.length - 1]
-        : "";
-
-    const branchLine =
-        `${esc(branchAddress)}${branchPhone ? ` ( Ph:${esc(phoneFirst)}` : ""}`;
-
-    const phoneLine = branchPhone && phoneLast
-        ? `${esc(phoneLast)} )`
+    // Source format displays "( Ph:09264-092640 )" on one line.
+    const phone = branchPhone
+        ? ` ( Ph:${esc(branchPhone)} )`
         : "";
 
     $("printArea").innerHTML = `
-        <div class="passbook-print">
-            <div class="p-header">
-                <span>PNB Passbook Print</span>
-                <span>Punjab National Bank</span>
-                <span>Customer Passbook</span>
+        <div class="source-pnb-format">
+
+            <div class="top-space"></div>
+
+            <div class="p-line">
+                <span class="m-l">BO: </span><span>${esc(branchName)}</span>
             </div>
 
-            <div class="p-subtitle p-subtitle1">
-                Keep Your Passbook Updated for a Better Banking Experience
-            </div>
-            <div class="p-subtitle p-subtitle2">
-                Thank You for Banking with Punjab National Bank
+            <div class="p-line">
+                <span class="m-l-15">${esc(branchAddress)}</span>
+                ${phone ? `<span>${phone}</span>` : ""}
             </div>
 
-            <div class="p-box"></div>
+            <div class="p-small-gap"></div>
 
-            ${line(47, `BO: ${esc(branchName)}`)}
-            ${line(54, branchLine)}
-            ${phoneLine ? line(61, phoneLine) : ""}
+            <div class="p-line">
+                <span class="m-l">MICR Code:</span>
+                <span style="margin-left:5px">${esc(customer.micrCode || "")}</span>
+            </div>
 
-            ${line(75, `MICR Code: ${esc(customer.micrCode || "")}`)}
-            ${line(82, `IFSC Code: ${esc(customer.ifscCode || "")}`)}
+            <div class="p-line">
+                <span class="m-l">IFSC Code:</span>
+                <span style="margin-left:5px">${esc(customer.ifscCode || "")}</span>
+            </div>
 
-            ${line(94, `*Contact: Toll Free-${esc(tollFree)}, Tolled-`, "p-x-contact")}
-            ${line(101, `01202490000*`, "p-x-contact")}
-            ${line(108, `*Principal Nodal Officer: Phn-${esc(nodalOfficer)}`, "p-x-contact")}
+            <div class="p-gap"></div>
 
-            ${line(123, `Mode of Operation : ${esc(customer.modeOfOperation || "")}`)}
-            ${line(130, `Customer ID : ${esc(customer.customerNo || "")}`)}
-            ${line(137, `Aadhar No.: ${esc(maskedAadhaar)}`)}
-            ${line(144, `Account No. : ${esc(customer.accountNo || "")}`)}
-            ${line(151, `${esc(customer.customerName || "")}`)}
-            ${line(158, `Account Open Date : ${esc(accountOpenDate)}`)}
-            ${line(165, `${esc(customer.relation || "")}`)}
+            <div class="p-line" style="margin-left:15px;font-size:11px;">
+                *Contact: Toll Free-${esc(tollFree)}, Tolled-01202490000*
+            </div>
 
-            ${line(172, esc(address1))}
-            ${line(179, esc(address2))}
-            ${line(186, esc(address3))}
+            <div class="p-line" style="margin-left:15px;">
+                *Principal Nodal Officer: Phn-${esc(nodalOfficer)}
+            </div>
 
-            ${line(193, `Nomination Registered at Sl.No. :`)}
-            ${line(200, `Date of Issue : ${esc(issueDate)}`)}
+            <div class="p-small-gap"></div>
 
-            ${line(216, `Each depositor is insured by DICGC upto amaximum Rs. 5.00lac`, "p-x-dicgc")}
-            ${line(223, `subject to change from time to time. (T&C applicable)`, "p-x-dicgc")}
+            <div class="p-line">
+                <span class="m-l">Mode of Operation :</span>
+                <span style="margin-left:5px">${esc(customer.modeOfOperation || "")}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">Customer No. :</span>
+                <span style="margin-left:5px">${esc(customer.customerNo || "")}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">Aadhar No.:</span>
+                <span style="margin-left:5px">${esc(maskedAadhaar)}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">Account No. :</span>
+                <span style="margin-left:5px">${esc(customer.accountNo || "")}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">${esc(customer.customerName || "")}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">Account Open Date :</span>
+                <span style="margin-left:5px">${esc(accountOpenDate)}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">${esc(customer.relation || "")}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">${esc(address1)}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">${esc(address2)}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">${esc(address3)}</span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l"> Nomination Registered at Sl.No. :</span>
+                <span style="margin-left:5px"></span>
+            </div>
+
+            <div class="p-line">
+                <span class="m-l">Date of Issue :</span>
+                <span style="margin-left:5px">${esc(issueDate)}</span>
+            </div>
+
+            <div class="p-line" style="margin-left:15px;">
+                Each depositor is insured by DICGC upto amaximum Rs. 5.00lac
+            </div>
+
+            <div class="p-line" style="margin-left:15px;">
+                subject to change from time to time. (T&amp;C applicable)
+            </div>
+
         </div>
     `;
 }
