@@ -353,7 +353,7 @@ th{
         margin:0;
     }
 
-    html, body{
+    html,body{
         width:210mm!important;
         height:297mm!important;
         margin:0!important;
@@ -364,8 +364,14 @@ th{
     body *{visibility:hidden!important;}
     #printArea,#printArea *{visibility:visible!important;}
 
+    /*
+      BOOK / PASSBOOK POSITION:
+      The original 766331 format is a narrow left-side print layout.
+      Keep it on the LEFT side of the sheet and move it slightly ABOVE
+      the vertical middle so it sits like the left page of an open book.
+    */
     #printArea{
-        display:flex!important;
+        display:block!important;
         position:absolute!important;
         left:0!important;
         top:0!important;
@@ -375,13 +381,12 @@ th{
         padding:0!important;
         background:#fff!important;
         overflow:hidden!important;
-        align-items:center!important;
-        justify-content:center!important;
     }
 
-    /* Same size/typography as the supplied 766331.htm,
-       but the complete format is centered on the blank A4 page. */
     .source-pnb-format{
+        position:absolute!important;
+        left:3%!important;
+        top:38%!important;
         width:52%!important;
         margin:0!important;
         padding:0!important;
@@ -392,7 +397,6 @@ th{
         color:#000!important;
         background:#fff!important;
         box-sizing:border-box!important;
-        flex:0 0 52%!important;
     }
 
     .source-pnb-format .m-l{
@@ -409,7 +413,8 @@ th{
     }
 
     .source-pnb-format .p-line{
-        margin:0!important;
+        margin-top:0!important;
+        margin-bottom:0!important;
         padding:0!important;
         font:inherit!important;
         white-space:nowrap!important;
