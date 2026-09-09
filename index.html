@@ -37,10 +37,14 @@ button{cursor:pointer}
     color:#0d47a1;
     text-align:center;
 }
-.login-box p{
-    text-align:center;
-    color:#666;
+.login-logo{
+    width:78px;height:78px;margin:0 auto 12px;border-radius:50%;
+    background:linear-gradient(135deg,#1976d2,#0d47a1);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:50px;
+    font-weight:900;border:5px solid #fff;box-shadow:0 5px 15px rgba(13,71,161,.28);
 }
+.login-brand{text-align:center;font-weight:800;font-size:22px;color:#0d47a1;margin-bottom:2px}
+.login-box p{text-align:center;color:#666}
 .form-group{margin-bottom:15px}
 .form-group label{
     display:block;
@@ -121,10 +125,17 @@ button{cursor:pointer}
 }
 .logo{
     text-align:center;
-    font-size:22px;
-    font-weight:bold;
-    padding:12px 5px 25px;
+    padding:8px 5px 25px;
 }
+.g-logo{
+    width:64px;height:64px;margin:0 auto 10px;border-radius:50%;
+    background:linear-gradient(135deg,#1976d2,#0d47a1);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:42px;
+    font-weight:900;font-family:Arial,sans-serif;border:4px solid #fff;
+    box-shadow:0 4px 12px rgba(0,0,0,.25);
+}
+.logo-title{font-size:20px;font-weight:700;color:#fff}
+.logo-subtitle{font-size:13px;color:#b9d7f5;margin-top:3px}
 .sidebar button{
     display:block;
     width:100%;
@@ -274,6 +285,10 @@ th{
     border-radius:5px;
 }
 
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.quick-actions button{min-height:62px;font-weight:700}
+@media(max-width:800px){.quick-actions{grid-template-columns:1fr 1fr}}
+
 /* PRINT */
 #printArea{
     display:none;
@@ -353,9 +368,10 @@ th{
     text-align:center;
     font-size:10px;
 }
-.print-buttons{
-    text-align:center;
-    margin:15px 0;
+.print-buttons{text-align:center;margin:15px 0}
+@media print{
+    .passbook-print{max-width:none;width:100%;}
+    .print-table td{font-size:11px;}
 }
 
 @media(max-width:800px){
@@ -390,7 +406,8 @@ th{
 <!-- LOGIN -->
 <div id="loginPage">
     <div class="login-box">
-        <h1>Great India Passbook</h1>
+        <div class="login-logo">G</div>
+        <div class="login-brand">Great India Passbook</div>
         <p>Retailer Portal Login</p>
 
         <form id="loginForm">
@@ -418,7 +435,9 @@ th{
 
     <aside class="sidebar" id="sidebar">
         <div class="logo">
-            Great India<br>Passbook
+            <div class="g-logo">G</div>
+            <div class="logo-title">Great India</div>
+            <div class="logo-subtitle">Passbook</div>
         </div>
 
         <button class="nav-btn active" data-page="dashboard">
@@ -493,6 +512,16 @@ th{
                     <h3>Assigned Branch</h3>
                     <div id="assignedBranchBox">
                         Loading...
+                    </div>
+                </div>
+
+                <div class="card quick-card">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-actions">
+                        <button class="primary" data-page-action="passbook">🖨️ Print Passbook</button>
+                        <button class="success admin-only" data-page-action="retailers">👤 Add Retailer</button>
+                        <button class="primary admin-only" data-page-action="branches">🏦 Manage Branches</button>
+                        <button class="secondary" data-page-action="customers">📋 View Records</button>
                     </div>
                 </div>
 
@@ -630,6 +659,11 @@ th{
                             </div>
 
                             <div class="form-group">
+                                <label>Password <span style="font-weight:normal;color:#777">(new retailer)</span></label>
+                                <input type="password" id="retailerPassword" minlength="6" placeholder="Minimum 6 characters">
+                            </div>
+
+                            <div class="form-group">
                                 <label>Assign Branch</label>
                                 <select id="retailerBranch" required>
                                     <option value="">Select Branch</option>
@@ -657,7 +691,7 @@ th{
                     </form>
 
                     <div class="notice" style="margin-top:15px">
-                        Firebase Authentication user must exist with the same UID as the retailer document.
+                        <strong>Direct Add Retailer:</strong> Admin यहाँ से नया Firebase Authentication account बना सकता है और उसी समय retailer profile + branch assignment save होगा. Existing retailer edit करते समय password खाली छोड़ें.
                     </div>
                 </div>
 
@@ -826,6 +860,7 @@ import {
 import {
     getAuth,
     signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
@@ -867,12 +902,17 @@ const firebaseConfig = {
 let app;
 let auth;
 let db;
+let retailerAuth;
 
 try {
 
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+
+    // Secondary Auth instance: creates a retailer without logging out the admin.
+    const retailerApp = initializeApp(firebaseConfig, "retailerCreatorApp");
+    retailerAuth = getAuth(retailerApp);
 
 } catch(error) {
 
@@ -939,6 +979,15 @@ function escapeHTML(value){
         .replaceAll(">","&gt;")
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
+}
+
+function normalizeMaskedAadhaar(value){
+    const v = String(value || "").trim();
+    if(!v) return "";
+    if(/^X{4,}\d{4}$/i.test(v)) return v.toUpperCase();
+    const digits = v.replace(/\D/g, "");
+    if(digits.length >= 4) return "XXXX" + digits.slice(-4);
+    return v.toUpperCase();
 }
 
 function formatDate(value){
@@ -1217,6 +1266,14 @@ document.querySelectorAll(".nav-btn")
 
 });
 
+
+document.querySelectorAll("[data-page-action]").forEach(button=>{
+    button.addEventListener("click",()=>{
+        const page=button.dataset.pageAction;
+        const target=document.querySelector(`.nav-btn[data-page="${page}"]`);
+        if(target) target.click();
+    });
+});
 
 /* =========================================================
    MOBILE MENU
@@ -1706,7 +1763,6 @@ function renderRetailers(){
 
 
 $("retailerForm").addEventListener("submit",async function(e){
-
     e.preventDefault();
 
     if(currentRole !== "admin"){
@@ -1715,88 +1771,64 @@ $("retailerForm").addEventListener("submit",async function(e){
     }
 
     const id = $("retailerId").value.trim();
+    const email = $("retailerEmail").value.trim();
+    const password = $("retailerPassword").value;
+    const branchId = $("retailerBranch").value;
 
-    const branchId =
-        $("retailerBranch").value;
+    if(!email){ alert("Retailer email required है."); return; }
+    if(!branchId){ alert("Branch select करें."); return; }
 
-    if(!branchId){
+    const branch = branchesCache.find(x => x.id === branchId);
+    if(!branch){ alert("Selected branch नहीं मिली."); return; }
 
-        alert("Branch select करें.");
-
-        return;
-    }
-
-    const branch =
-        branchesCache.find(x => x.id === branchId);
-
-    if(!branch){
-
-        alert("Selected branch नहीं मिली.");
-
+    if(!id && password.length < 6){
+        alert("नए retailer के लिए password कम से कम 6 characters का रखें.");
         return;
     }
 
     const data = {
-
         name:$("retailerName").value.trim(),
-
-        email:$("retailerEmail").value.trim(),
-
+        email:email,
         phone:$("retailerPhone").value.trim(),
-
         role:"retailer",
-
         status:$("retailerStatus").value,
-
         branchId:branch.id,
-
         branchName:branch.branchName,
-
         bankId:"PNB",
-
         updatedAt:serverTimestamp()
-
     };
 
-
     try{
-
-        if(!id){
-
-            alert(
-                "पहले Firebase Authentication में retailer user बनाकर उसका UID प्राप्त करें। फिर उसी UID को Retailer ID में इस्तेमाल करें।"
+        if(id){
+            await setDoc(doc(db,"retailers",id),data,{merge:true});
+            alert("Retailer profile updated successfully.");
+        }else{
+            const credential = await createUserWithEmailAndPassword(
+                retailerAuth,email,password
             );
-
-            return;
+            const newUid = credential.user.uid;
+            data.createdAt = serverTimestamp();
+            await setDoc(doc(db,"retailers",newUid),data);
+            await signOut(retailerAuth);
+            alert("Retailer created successfully. अब retailer इसी Email और Password से login कर सकता है.");
         }
 
-
-        await setDoc(
-            doc(db,"retailers",id),
-            data,
-            {merge:true}
-        );
-
-        alert("Retailer saved successfully.");
-
         clearRetailerForm();
-
         await loadRetailers();
-
         updateDashboard();
 
     }catch(error){
-
         console.error(error);
-
-        alert(
-            "Retailer save failed:\n" +
-            error.message
-        );
+        if(!id && error.code === "auth/email-already-in-use"){
+            alert("यह email पहले से Firebase Authentication में मौजूद है. Existing retailer का profile Edit करके save करें.");
+        }else if(!id && error.code === "auth/operation-not-allowed"){
+            alert("Firebase Console → Authentication → Sign-in method → Email/Password enable करें.");
+        }else{
+            alert("Retailer save failed:
+" + error.message);
+        }
     }
-
 });
-
 
 function editRetailer(id){
 
@@ -1821,6 +1853,8 @@ function editRetailer(id){
 
     $("retailerStatus").value =
         retailer.status || "active";
+
+    $("retailerPassword").value = "";
 
     window.scrollTo({
         top:0,
@@ -1856,11 +1890,9 @@ async function deleteRetailer(id){
 
 
 function clearRetailerForm(){
-
     $("retailerForm").reset();
-
     $("retailerId").value = "";
-
+    $("retailerPassword").value = "";
     $("retailerStatus").value = "active";
 }
 
@@ -2264,7 +2296,7 @@ async function saveCustomer(printAfter){
         customerName:customerName,
 
         aadhaar:
-            $("aadhaar").value.trim(),
+            normalizeMaskedAadhaar($("aadhaar").value.trim()),
 
         accountOpenDate:
             $("accountOpenDate").value,
