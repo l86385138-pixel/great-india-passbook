@@ -1824,8 +1824,7 @@ $("retailerForm").addEventListener("submit",async function(e){
         }else if(!id && error.code === "auth/operation-not-allowed"){
             alert("Firebase Console → Authentication → Sign-in method → Email/Password enable करें.");
         }else{
-            alert("Retailer save failed:
-" + error.message);
+            alert("Retailer save failed:\n" + error.message);
         }
     }
 });
