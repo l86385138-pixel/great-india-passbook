@@ -8,285 +8,379 @@
 <style>
 *{box-sizing:border-box}
 body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#f3f6fa;
-  color:#172033;
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f9;
+    color:#222;
 }
-.hidden{display:none!important}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
 
-.login-wrap{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:linear-gradient(135deg,#0d47a1,#1976d2);
+#loginPage{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:linear-gradient(135deg,#0d47a1,#1976d2);
 }
-.login-card{
-  width:100%;
-  max-width:420px;
-  background:#fff;
-  border-radius:18px;
-  padding:30px;
-  box-shadow:0 15px 45px rgba(0,0,0,.25);
+.login-box{
+    width:100%;
+    max-width:420px;
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
+}
+.login-box h1{
+    margin:0 0 8px;
+    color:#0d47a1;
+    text-align:center;
+}
+.login-box p{
+    text-align:center;
+    color:#666;
+}
+.form-group{margin-bottom:15px}
+.form-group label{
+    display:block;
+    font-weight:bold;
+    margin-bottom:6px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea,
+.search-box input{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid #ccc;
+    border-radius:7px;
+    outline:none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
+    border-color:#1976d2;
+}
+.primary{
+    background:#1976d2;
+    color:#fff;
+    border:0;
+    padding:11px 18px;
+    border-radius:7px;
+}
+.primary:hover{background:#0d47a1}
+.success{
+    background:#198754;
+    color:#fff;
+    border:0;
+    padding:10px 15px;
+    border-radius:7px;
+}
+.danger{
+    background:#dc3545;
+    color:#fff;
+    border:0;
+    padding:9px 13px;
+    border-radius:6px;
+}
+.secondary{
+    background:#6c757d;
+    color:#fff;
+    border:0;
+    padding:10px 15px;
+    border-radius:7px;
+}
+.full{width:100%}
+
+#errorBox{
+    display:none;
+    margin-top:12px;
+    padding:10px;
+    border-radius:7px;
+    background:#ffe5e5;
+    color:#b00020;
+    font-size:14px;
+}
+
+#app{
+    display:none;
+    min-height:100vh;
+}
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:240px;
+    background:#102a43;
+    color:#fff;
+    padding:20px 12px;
+    z-index:20;
 }
 .logo{
-  width:70px;
-  height:70px;
-  margin:auto;
-  border-radius:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#0d47a1;
-  color:#fff;
-  font-size:28px;
-  font-weight:bold;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    padding:12px 5px 25px;
 }
-h1,h2,h3{margin-top:0}
-.login-card h1{text-align:center;margin:18px 0 5px}
-.login-card p{text-align:center;color:#687386}
-
-input,select,textarea{
-  width:100%;
-  padding:12px 13px;
-  margin-top:7px;
-  margin-bottom:14px;
-  border:1px solid #ccd4df;
-  border-radius:8px;
-  font-size:15px;
-  outline:none;
+.sidebar button{
+    display:block;
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#fff;
+    text-align:left;
+    padding:13px 15px;
+    border-radius:7px;
+    margin-bottom:5px;
 }
-input:focus,select:focus,textarea:focus{
-  border-color:#1976d2;
+.sidebar button:hover,
+.sidebar button.active{
+    background:#1976d2;
 }
-label{
-  font-size:14px;
-  font-weight:bold;
-}
-button{
-  border:0;
-  border-radius:8px;
-  padding:11px 16px;
-  cursor:pointer;
-  font-weight:bold;
-  font-size:14px;
-}
-.btn-primary{
-  background:#0d47a1;
-  color:#fff;
-}
-.btn-success{
-  background:#198754;
-  color:#fff;
-}
-.btn-danger{
-  background:#dc3545;
-  color:#fff;
-}
-.btn-secondary{
-  background:#6c757d;
-  color:#fff;
-}
-.btn-full{
-  width:100%;
-}
-.error{
-  background:#ffe5e5;
-  color:#b00020;
-  padding:11px;
-  border-radius:8px;
-  margin:12px 0;
-  font-size:14px;
-}
-.success{
-  background:#e3f7e9;
-  color:#176b32;
-  padding:11px;
-  border-radius:8px;
-  margin:12px 0;
-  font-size:14px;
+.logout-btn{
+    position:absolute;
+    left:12px;
+    right:12px;
+    bottom:20px;
+    background:#dc3545!important;
 }
 
-.app{
-  min-height:100vh;
-  display:flex;
-}
-.sidebar{
-  width:245px;
-  background:#10233f;
-  color:#fff;
-  padding:20px 14px;
-  position:fixed;
-  left:0;
-  top:0;
-  bottom:0;
-}
-.brand{
-  font-size:20px;
-  font-weight:bold;
-  padding:10px 12px 25px;
-}
-.menu button{
-  display:block;
-  width:100%;
-  text-align:left;
-  background:transparent;
-  color:#dbe6f5;
-  margin:4px 0;
-}
-.menu button:hover,
-.menu button.active{
-  background:#1d4f88;
-  color:#fff;
-}
 .main{
-  margin-left:245px;
-  width:calc(100% - 245px);
-  min-height:100vh;
+    margin-left:240px;
+    min-height:100vh;
 }
 .topbar{
-  height:65px;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 25px;
-  border-bottom:1px solid #e3e7ed;
+    background:#fff;
+    padding:15px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    box-shadow:0 1px 5px rgba(0,0,0,.1);
+    position:sticky;
+    top:0;
+    z-index:10;
 }
+.topbar h2{
+    margin:0;
+    font-size:20px;
+}
+.user-info{
+    color:#555;
+    font-size:14px;
+}
+
 .content{
-  padding:25px;
+    padding:22px;
 }
+.page{display:none}
+.page.active{display:block}
+
 .card{
-  background:#fff;
-  border-radius:12px;
-  padding:20px;
-  margin-bottom:20px;
-  box-shadow:0 2px 10px rgba(0,0,0,.06);
+    background:#fff;
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.07);
 }
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:18px;
+.card h3{
+    margin-top:0;
+    color:#0d47a1;
 }
-.grid-3{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:18px;
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
 }
 .stat{
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,.06);
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.07);
 }
 .stat strong{
-  display:block;
-  font-size:28px;
-  margin-top:8px;
+    display:block;
+    font-size:28px;
+    margin-top:8px;
+    color:#1976d2;
 }
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+.grid-3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+.full-width{grid-column:1/-1}
+
 .table-wrap{
-  overflow:auto;
+    overflow-x:auto;
 }
 table{
-  width:100%;
-  border-collapse:collapse;
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
 }
 th,td{
-  padding:11px;
-  border-bottom:1px solid #e5e8ed;
-  text-align:left;
-  font-size:14px;
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:left;
+    font-size:14px;
 }
 th{
-  background:#f5f7fa;
+    background:#eaf2f8;
+    color:#123;
+}
+.actions{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
 }
 
-.branch-box{
-  background:#eef6ff;
-  border:1px solid #cfe4ff;
-  border-radius:10px;
-  padding:15px;
-  margin-bottom:18px;
-}
-.readonly{
-  background:#f0f2f5;
+.badge{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:20px;
+    background:#dff6e5;
+    color:#18733b;
+    font-size:12px;
 }
 
+.notice{
+    padding:12px;
+    background:#fff3cd;
+    color:#664d03;
+    border-radius:7px;
+    margin-bottom:15px;
+}
+
+.search-box{
+    margin-bottom:15px;
+}
+
+.mobile-menu{
+    display:none;
+    border:0;
+    background:#1976d2;
+    color:#fff;
+    padding:8px 11px;
+    border-radius:5px;
+}
+
+/* PRINT */
 #printArea{
-  display:none;
-}
-
-@media(max-width:800px){
-  .sidebar{
-    position:relative;
-    width:100%;
-    min-height:auto;
-  }
-  .app{
-    display:block;
-  }
-  .main{
-    margin-left:0;
-    width:100%;
-  }
-  .grid,.grid-3{
-    grid-template-columns:1fr;
-  }
+    display:none;
 }
 
 @media print{
-  body *{
-    visibility:hidden!important;
-  }
-  #printArea,
-  #printArea *{
-    visibility:visible!important;
-  }
-  #printArea{
-    display:block!important;
-    position:absolute;
-    left:0;
-    top:0;
+    body *{
+        visibility:hidden!important;
+    }
+    #printArea,
+    #printArea *{
+        visibility:visible!important;
+    }
+    #printArea{
+        display:block!important;
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        background:#fff;
+    }
+    @page{
+        size:A4;
+        margin:10mm;
+    }
+}
+
+.passbook-print{
     width:100%;
-    background:#fff;
+    max-width:800px;
+    margin:auto;
+    font-family:Arial,Helvetica,sans-serif;
     color:#000;
-  }
-  .print-page{
-    width:100%;
-    padding:20px;
-    font-family:Arial,sans-serif;
-  }
-  .print-header{
+}
+.print-header{
     text-align:center;
     border-bottom:2px solid #000;
-    padding-bottom:10px;
-  }
-  .print-header h2{
+    padding-bottom:8px;
+}
+.print-header h2{
+    margin:0;
+    font-size:20px;
+}
+.print-header h3{
+    margin:4px 0;
+    font-size:16px;
+}
+.print-header p{
     margin:3px 0;
-  }
-  .print-row{
-    display:flex;
-    border-bottom:1px solid #555;
-    min-height:30px;
-  }
-  .print-label{
-    width:38%;
-    font-weight:bold;
-    padding:6px;
-    border-right:1px solid #555;
-  }
-  .print-value{
-    width:62%;
-    padding:6px;
-  }
-  .print-footer{
-    margin-top:20px;
     font-size:12px;
+}
+.print-section-title{
+    text-align:center;
+    font-weight:bold;
+    margin:10px 0 5px;
+    border:1px solid #000;
+    padding:5px;
+}
+.print-table{
+    width:100%;
+    border-collapse:collapse;
+}
+.print-table td{
+    border:1px solid #000;
+    padding:5px 7px;
+    font-size:12px;
+    vertical-align:top;
+}
+.print-table .label{
+    width:25%;
+    font-weight:bold;
+}
+.print-footer{
     border-top:1px solid #000;
-    padding-top:8px;
-  }
+    margin-top:10px;
+    padding-top:6px;
+    text-align:center;
+    font-size:10px;
+}
+.print-buttons{
+    text-align:center;
+    margin:15px 0;
+}
+
+@media(max-width:800px){
+    .sidebar{
+        transform:translateX(-100%);
+        transition:.2s;
+    }
+    .sidebar.open{
+        transform:translateX(0);
+    }
+    .main{
+        margin-left:0;
+    }
+    .mobile-menu{
+        display:block;
+    }
+    .stats{
+        grid-template-columns:1fr;
+    }
+    .grid,.grid-3{
+        grid-template-columns:1fr;
+    }
+    .content{
+        padding:12px;
+    }
 }
 </style>
 </head>
@@ -294,436 +388,480 @@ th{
 <body>
 
 <!-- LOGIN -->
-<div id="loginPage" class="login-wrap">
-  <div class="login-card">
+<div id="loginPage">
+    <div class="login-box">
+        <h1>Great India Passbook</h1>
+        <p>Retailer Portal Login</p>
 
-    <div class="logo">GI</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" required autocomplete="username">
+            </div>
 
-    <h1>Great India Passbook</h1>
-    <p>Retailer Portal</p>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" required autocomplete="current-password">
+            </div>
 
-    <div id="loginError" class="error hidden"></div>
-    <div id="loginSuccess" class="success hidden"></div>
+            <button class="primary full" type="submit" id="loginBtn">
+                Login
+            </button>
 
-    <label>Email</label>
-    <input id="email" type="email" placeholder="Enter email">
-
-    <label>Password</label>
-    <input id="password" type="password" placeholder="Enter password">
-
-    <button id="loginBtn" class="btn-primary btn-full">
-      Login
-    </button>
-
-  </div>
+            <div id="errorBox"></div>
+        </form>
+    </div>
 </div>
-
 
 <!-- APPLICATION -->
-<div id="appPage" class="app hidden">
+<div id="app">
 
-  <aside class="sidebar">
-    <div class="brand">
-      Great India Passbook
-    </div>
-
-    <div class="menu">
-
-      <button onclick="showPage('dashboard')">
-        Dashboard
-      </button>
-
-      <button id="branchesMenu" onclick="showPage('branches')">
-        Branch Management
-      </button>
-
-      <button id="retailersMenu" onclick="showPage('retailers')">
-        Retailers
-      </button>
-
-      <button onclick="showPage('passbook')">
-        Manual Passbook Print
-      </button>
-
-      <button onclick="logout()" class="btn-danger">
-        Logout
-      </button>
-
-    </div>
-  </aside>
-
-
-  <main class="main">
-
-    <header class="topbar">
-      <strong id="pageTitle">
-        Dashboard
-      </strong>
-
-      <span id="userInfo"></span>
-    </header>
-
-    <section class="content">
-
-      <!-- DASHBOARD -->
-      <div id="dashboardPage">
-
-        <div class="grid-3">
-
-          <div class="stat">
-            <span>Role</span>
-            <strong id="roleText">-</strong>
-          </div>
-
-          <div class="stat">
-            <span>Branch</span>
-            <strong id="branchText">-</strong>
-          </div>
-
-          <div class="stat">
-            <span>Status</span>
-            <strong>Active</strong>
-          </div>
-
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            Great India<br>Passbook
         </div>
 
-        <div class="card">
-          <h2>Welcome</h2>
-          <p>
-            Great India Passbook Retailer Portal में आपका स्वागत है।
-          </p>
+        <button class="nav-btn active" data-page="dashboard">
+            🏠 Dashboard
+        </button>
+
+        <button class="nav-btn admin-only" data-page="branches">
+            🏦 Branches
+        </button>
+
+        <button class="nav-btn admin-only" data-page="retailers">
+            👤 Retailers
+        </button>
+
+        <button class="nav-btn" data-page="passbook">
+            📖 Passbook Print
+        </button>
+
+        <button class="nav-btn" data-page="customers">
+            📋 Records
+        </button>
+
+        <button class="logout-btn" id="logoutBtn">
+            🚪 Logout
+        </button>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:10px">
+                <button class="mobile-menu" id="mobileMenu">☰</button>
+                <h2 id="pageTitle">Dashboard</h2>
+            </div>
+            <div class="user-info">
+                <span id="userName">User</span>
+                |
+                <span id="userRole">Retailer</span>
+            </div>
         </div>
 
-      </div>
+        <div class="content">
 
+            <!-- DASHBOARD -->
+            <section class="page active" id="page-dashboard">
 
-      <!-- BRANCHES -->
-      <div id="branchesPage" class="hidden">
+                <div class="card">
+                    <h3>Welcome to Great India Passbook</h3>
+                    <p id="dashboardMessage">
+                        Passbook Retailer Portal
+                    </p>
+                </div>
 
-        <div class="card">
+                <div class="stats">
+                    <div class="stat">
+                        <div>Branches</div>
+                        <strong id="branchCount">0</strong>
+                    </div>
 
-          <h2>Branch Management</h2>
+                    <div class="stat">
+                        <div>Retailers</div>
+                        <strong id="retailerCount">0</strong>
+                    </div>
 
-          <div class="grid">
+                    <div class="stat">
+                        <div>Customer Records</div>
+                        <strong id="customerCount">0</strong>
+                    </div>
+                </div>
 
-            <div>
-              <label>Branch ID</label>
-              <input id="branchId" placeholder="example: jaitpur">
-            </div>
+                <div class="card" style="margin-top:20px">
+                    <h3>Assigned Branch</h3>
+                    <div id="assignedBranchBox">
+                        Loading...
+                    </div>
+                </div>
 
-            <div>
-              <label>Bank Name</label>
-              <input id="bankName" value="Punjab National Bank">
-            </div>
+            </section>
 
-            <div>
-              <label>Branch Name</label>
-              <input id="branchName">
-            </div>
+            <!-- BRANCHES -->
+            <section class="page" id="page-branches">
 
-            <div>
-              <label>Branch Code</label>
-              <input id="branchCode">
-            </div>
+                <div class="card">
+                    <h3>Add / Edit Branch</h3>
 
-            <div>
-              <label>IFSC Code</label>
-              <input id="ifscCode">
-            </div>
+                    <form id="branchForm">
 
-            <div>
-              <label>MICR Code</label>
-              <input id="micrCode">
-            </div>
+                        <input type="hidden" id="branchId">
 
-          </div>
+                        <div class="grid">
 
-          <label>Branch Address</label>
-          <textarea id="branchAddress"></textarea>
+                            <div class="form-group">
+                                <label>Bank Name</label>
+                                <input id="branchBankName" value="Punjab National Bank" required>
+                            </div>
 
-          <div class="grid">
+                            <div class="form-group">
+                                <label>Branch Name</label>
+                                <input id="branchName" required>
+                            </div>
 
-            <div>
-              <label>Branch Phone</label>
-              <input id="branchPhone">
-            </div>
+                            <div class="form-group">
+                                <label>Branch Code</label>
+                                <input id="branchCode" required>
+                            </div>
 
-            <div>
-              <label>Nodal Officer</label>
-              <input id="nodalOfficer">
-            </div>
+                            <div class="form-group">
+                                <label>IFSC Code</label>
+                                <input id="ifscCode" required>
+                            </div>
 
-          </div>
+                            <div class="form-group">
+                                <label>MICR Code</label>
+                                <input id="micrCode">
+                            </div>
 
-          <button class="btn-primary" onclick="saveBranch()">
-            Save Branch
-          </button>
+                            <div class="form-group">
+                                <label>Branch Phone</label>
+                                <input id="branchPhone">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Branch Address</label>
+                                <textarea id="branchAddress" rows="2"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Toll Free</label>
+                                <input id="tollFree">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Nodal Officer</label>
+                                <input id="nodalOfficer">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="branchStatus">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <button class="primary" type="submit">
+                            Save Branch
+                        </button>
+
+                        <button class="secondary" type="button" id="clearBranch">
+                            Clear
+                        </button>
+
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Branch List</h3>
+
+                    <div class="search-box">
+                        <input id="branchSearch" placeholder="Search branch...">
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Branch</th>
+                                    <th>Code</th>
+                                    <th>IFSC</th>
+                                    <th>MICR</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="branchTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- RETAILERS -->
+            <section class="page" id="page-retailers">
+
+                <div class="card">
+                    <h3>Retailer Management</h3>
+
+                    <form id="retailerForm">
+
+                        <input type="hidden" id="retailerId">
+
+                        <div class="grid">
+
+                            <div class="form-group">
+                                <label>Retailer Name</label>
+                                <input id="retailerName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="retailerEmail" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input id="retailerPhone">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Assign Branch</label>
+                                <select id="retailerBranch" required>
+                                    <option value="">Select Branch</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="retailerStatus">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <button class="primary" type="submit">
+                            Save Retailer
+                        </button>
+
+                        <button class="secondary" type="button" id="clearRetailer">
+                            Clear
+                        </button>
+
+                    </form>
+
+                    <div class="notice" style="margin-top:15px">
+                        Firebase Authentication user must exist with the same UID as the retailer document.
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Retailer List</h3>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Branch</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="retailerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- PASSBOOK -->
+            <section class="page" id="page-passbook">
+
+                <div class="card">
+                    <h3>Passbook Print</h3>
+
+                    <div id="retailerBranchNotice" class="notice">
+                        Loading assigned branch...
+                    </div>
+
+                    <form id="customerForm">
+
+                        <input type="hidden" id="customerId">
+
+                        <div class="grid">
+
+                            <div class="form-group">
+                                <label>Customer Number</label>
+                                <input id="customerNo">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Account Number</label>
+                                <input id="accountNo" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Customer Name</label>
+                                <input id="customerName" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Masked Aadhaar</label>
+                                <input id="aadhaar" placeholder="XXXX4503">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Account Open Date</label>
+                                <input type="date" id="accountOpenDate">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Issue Date</label>
+                                <input type="date" id="issueDate">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Mode of Operation</label>
+                                <select id="modeOfOperation">
+                                    <option value="SELF">SELF</option>
+                                    <option value="EITHER OR SURVIVOR">
+                                        EITHER OR SURVIVOR
+                                    </option>
+                                    <option value="JOINT">JOINT</option>
+                                    <option value="FORMER OR SURVIVOR">
+                                        FORMER OR SURVIVOR
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Relation</label>
+                                <input id="relation">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Address</label>
+                                <textarea id="address" rows="3"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Nomination</label>
+                                <select id="nomination">
+                                    <option value="Registered">Registered</option>
+                                    <option value="Not Registered">Not Registered</option>
+                                    <option value="N/A">N/A</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <button class="success" type="submit">
+                            Save Customer
+                        </button>
+
+                        <button class="primary" type="button" id="savePrintBtn">
+                            Save & Print
+                        </button>
+
+                        <button class="secondary" type="button" id="clearCustomer">
+                            Clear
+                        </button>
+
+                    </form>
+                </div>
+
+            </section>
+
+            <!-- CUSTOMER RECORDS -->
+            <section class="page" id="page-customers">
+
+                <div class="card">
+                    <h3>Customer Records</h3>
+
+                    <div class="search-box">
+                        <input id="customerSearch" placeholder="Search customer name / account number...">
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Account</th>
+                                    <th>Customer No.</th>
+                                    <th>Branch</th>
+                                    <th>Issue Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
 
         </div>
-
-
-        <div class="card">
-          <h3>Branches</h3>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Bank</th>
-                  <th>Branch</th>
-                  <th>IFSC</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody id="branchesTable"></tbody>
-            </table>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- RETAILERS -->
-      <div id="retailersPage" class="hidden">
-
-        <div class="card">
-
-          <h2>Retailer Management</h2>
-
-          <div class="grid">
-
-            <div>
-              <label>Retailer UID</label>
-              <input id="retailerUid">
-            </div>
-
-            <div>
-              <label>Retailer Name</label>
-              <input id="retailerName">
-            </div>
-
-            <div>
-              <label>Email</label>
-              <input id="retailerEmail" type="email">
-            </div>
-
-            <div>
-              <label>Phone</label>
-              <input id="retailerPhone">
-            </div>
-
-          </div>
-
-          <label>Assign Branch</label>
-          <select id="retailerBranch"></select>
-
-          <br><br>
-
-          <button class="btn-primary" onclick="saveRetailer()">
-            Save Retailer
-          </button>
-
-        </div>
-
-
-        <div class="card">
-
-          <h3>Retailers</h3>
-
-          <div class="table-wrap">
-
-            <table>
-
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Branch</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-
-              <tbody id="retailersTable"></tbody>
-
-            </table>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- PASSBOOK -->
-      <div id="passbookPage" class="hidden">
-
-        <div class="card">
-
-          <h2>PNB Manual Passbook Print</h2>
-
-          <div id="assignedBranchBox" class="branch-box">
-            Loading branch...
-          </div>
-
-          <div class="grid">
-
-            <div>
-              <label>Customer Number</label>
-              <input id="customerNo">
-            </div>
-
-            <div>
-              <label>Account Number</label>
-              <input id="accountNo">
-            </div>
-
-            <div>
-              <label>Customer Name</label>
-              <input id="customerName">
-            </div>
-
-            <div>
-              <label>Account Open Date</label>
-              <input id="accountOpenDate" type="date">
-            </div>
-
-            <div>
-              <label>Mode of Operation</label>
-              <select id="modeOperation">
-                <option>SELF</option>
-                <option>JOINT</option>
-                <option>EITHER OR SURVIVOR</option>
-                <option>FORMER OR SURVIVOR</option>
-              </select>
-            </div>
-
-            <div>
-              <label>Relation</label>
-              <input id="relation">
-            </div>
-
-            <div>
-              <label>Aadhaar</label>
-              <input id="aadhaar" maxlength="12"
-                     placeholder="12 digit Aadhaar">
-            </div>
-
-            <div>
-              <label>Nomination</label>
-              <select id="nomination">
-                <option>YES</option>
-                <option>NO</option>
-              </select>
-            </div>
-
-          </div>
-
-          <label>Customer Address</label>
-          <textarea id="customerAddress"></textarea>
-
-          <br>
-
-          <button class="btn-success" onclick="saveCustomer()">
-            Save
-          </button>
-
-          <button class="btn-primary" onclick="printPassbook()">
-            Save & Print
-          </button>
-
-        </div>
-
-
-        <div class="card">
-
-          <h3>Saved Customers</h3>
-
-          <div class="table-wrap">
-
-            <table>
-
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Account</th>
-                  <th>Aadhaar</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody id="customersTable"></tbody>
-
-            </table>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
+    </main>
 </div>
 
-
-<!-- PRINT -->
+<!-- PRINT AREA -->
 <div id="printArea"></div>
 
-
 <script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    setDoc,
+    addDoc,
+    deleteDoc,
+    serverTimestamp,
+    query,
+    where
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 
 /* =========================================================
    FIREBASE CONFIG
    ========================================================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyArV9f1boPcTM6kUQrSFBnuotn6iDi38",
-  authDomain: "great-india-passbook.firebaseapp.com",
-  projectId: "great-india-passbook",
-  storageBucket: "great-india-passbook.firebasestorage.app",
-  messagingSenderId: "969674609314",
-  appId: "1:969674609314:web:ac8aa9117c30da39bfbdfb",
-  measurementId: "G-F35DE2E7HM"
+    apiKey: "AIzaSyAf9UziWeVaYdfXZ60GiPCfPn68RUA--wM",
+    authDomain: "great-india-passbook.firebaseapp.com",
+    projectId: "great-india-passbook",
+    storageBucket: "great-india-passbook.firebasestorage.app",
+    messagingSenderId: "969674609314",
+    appId: "1:969674609314:web:ac8aa9117c30da39bfbdfb",
+    measurementId: "G-F35DE2E7HM"
 };
 
 
 /* =========================================================
-   FIREBASE IMPORTS
-   ========================================================= */
-
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  addDoc,
-  deleteDoc,
-  serverTimestamp,
-  query,
-  where
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-
-/* =========================================================
-   INITIALIZE
+   FIREBASE INITIALIZE
    ========================================================= */
 
 let app;
@@ -732,27 +870,25 @@ let db;
 
 try {
 
-  app = initializeApp(firebaseConfig);
-
-  auth = getAuth(app);
-
-  db = getFirestore(app);
-
-  console.log("Firebase initialized successfully");
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
 
 } catch(error) {
 
-  console.error("Firebase initialization error:", error);
+    console.error(error);
 
-  showLoginError(
-    "Firebase initialization failed: " + error.message
-  );
+    const box = document.getElementById("errorBox");
 
+    if(box){
+        box.style.display = "block";
+        box.textContent = "Firebase initialization failed: " + error.message;
+    }
 }
 
 
 /* =========================================================
-   GLOBAL DATA
+   GLOBAL VARIABLES
    ========================================================= */
 
 let currentUser = null;
@@ -760,52 +896,129 @@ let currentRole = null;
 let currentProfile = null;
 let currentBranch = null;
 
+let branchesCache = [];
+let retailersCache = [];
+let customersCache = [];
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function $(id){
+    return document.getElementById(id);
+}
+
+function showError(message){
+
+    const box = $("errorBox");
+
+    if(!box) return;
+
+    box.style.display = "block";
+    box.textContent = message;
+}
+
+function clearError(){
+
+    const box = $("errorBox");
+
+    if(box){
+        box.style.display = "none";
+        box.textContent = "";
+    }
+}
+
+function escapeHTML(value){
+
+    if(value === null || value === undefined) return "";
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+}
+
+function formatDate(value){
+
+    if(!value) return "";
+
+    if(value.toDate){
+        return value.toDate().toLocaleDateString("en-IN");
+    }
+
+    const d = new Date(value);
+
+    if(isNaN(d.getTime())) return value;
+
+    return d.toLocaleDateString("en-IN");
+}
+
+function today(){
+
+    const d = new Date();
+
+    return d.toISOString().split("T")[0];
+}
+
 
 /* =========================================================
    LOGIN
    ========================================================= */
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
+$("loginForm").addEventListener("submit", async function(e){
 
-  const email =
-    document.getElementById("email").value.trim();
+    e.preventDefault();
 
-  const password =
-    document.getElementById("password").value;
+    clearError();
 
-  hideLoginMessages();
+    const email = $("loginEmail").value.trim();
+    const password = $("loginPassword").value;
 
-  if(!email || !password){
+    $("loginBtn").disabled = true;
+    $("loginBtn").textContent = "Logging in...";
 
-    showLoginError("Email और Password दोनों भरें।");
+    try{
 
-    return;
-  }
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
 
-  const button =
-    document.getElementById("loginBtn");
+    }catch(error){
 
-  button.disabled = true;
-  button.textContent = "Logging in...";
+        console.error(error);
 
-  try {
+        let message = error.message;
 
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+        if(error.code === "auth/invalid-credential"){
+            message = "Email या Password गलत है।";
+        }
 
-  } catch(error) {
+        if(error.code === "auth/user-not-found"){
+            message = "यह Firebase Authentication user मौजूद नहीं है।";
+        }
 
-    console.error(error);
+        if(error.code === "auth/api-key-not-valid"){
+            message =
+            "Firebase API key invalid है। Google Cloud में API key 2 की restrictions और Firebase Web App config check करें।";
+        }
 
-    showLoginError(getFirebaseError(error));
+        if(error.code === "auth/operation-not-allowed"){
+            message =
+            "Firebase Console → Authentication → Sign-in method → Email/Password enable करें।";
+        }
 
-    button.disabled = false;
-    button.textContent = "Login";
+        showError(message);
 
-  }
+    }finally{
+
+        $("loginBtn").disabled = false;
+        $("loginBtn").textContent = "Login";
+    }
 
 });
 
@@ -814,32 +1027,39 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
    AUTH STATE
    ========================================================= */
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async function(user){
 
-  if(!user){
+    if(!user){
 
-    showLogin();
+        currentUser = null;
 
-    return;
-  }
+        $("loginPage").style.display = "flex";
+        $("app").style.display = "none";
 
-  currentUser = user;
+        return;
+    }
 
-  try {
+    currentUser = user;
 
-    await loadUserProfile();
+    try{
 
-  } catch(error) {
+        await loadUserProfile();
 
-    console.error(error);
+        $("loginPage").style.display = "none";
+        $("app").style.display = "block";
 
-    showLoginError(
-      "Profile load failed: " + error.message
-    );
+        await initializePortal();
 
-    await signOut(auth);
+    }catch(error){
 
-  }
+        console.error(error);
+
+        await signOut(auth);
+
+        showError(
+            "User profile load नहीं हो पाया: " + error.message
+        );
+    }
 
 });
 
@@ -850,1140 +1070,1735 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadUserProfile(){
 
-  /* ADMIN CHECK */
+    const uid = currentUser.uid;
 
-  const adminRef =
-    doc(db, "admins", currentUser.uid);
+    /* ADMIN CHECK */
 
-  const adminSnap =
-    await getDoc(adminRef);
+    const adminRef = doc(db,"admins",uid);
+    const adminSnap = await getDoc(adminRef);
 
-  if(adminSnap.exists()){
+    if(adminSnap.exists()){
 
-    currentRole = "admin";
+        currentRole = "admin";
+        currentProfile = adminSnap.data();
 
-    currentProfile = adminSnap.data();
+        $("userName").textContent =
+            currentProfile.name || "Admin";
 
-    currentBranch = null;
+        $("userRole").textContent = "Admin";
 
-    openApplication();
-
-    await loadBranches();
-    await loadRetailers();
-
-    return;
-  }
-
-
-  /* RETAILER CHECK */
-
-  const retailerRef =
-    doc(db, "retailers", currentUser.uid);
-
-  const retailerSnap =
-    await getDoc(retailerRef);
-
-  if(retailerSnap.exists()){
-
-    currentRole = "retailer";
-
-    currentProfile = retailerSnap.data();
-
-    const branchId =
-      currentProfile.branchId;
-
-    if(branchId){
-
-      const branchSnap =
-        await getDoc(
-          doc(db, "branches", branchId)
-        );
-
-      if(branchSnap.exists()){
-
-        currentBranch = {
-          id: branchSnap.id,
-          ...branchSnap.data()
-        };
-
-      }
-
-    }
-
-    openApplication();
-
-    await loadCustomers();
-
-    return;
-  }
-
-
-  throw new Error(
-    "इस Firebase account के लिए Admin/Retailer profile नहीं मिली।"
-  );
-}
-
-
-/* =========================================================
-   OPEN APPLICATION
-   ========================================================= */
-
-function openApplication(){
-
-  document
-    .getElementById("loginPage")
-    .classList.add("hidden");
-
-  document
-    .getElementById("appPage")
-    .classList.remove("hidden");
-
-  document.getElementById("roleText").textContent =
-    currentRole;
-
-  document.getElementById("userInfo").textContent =
-    currentUser.email;
-
-  if(currentBranch){
-
-    document.getElementById("branchText").textContent =
-      currentBranch.branchName || "-";
-
-    document.getElementById("assignedBranchBox").innerHTML =
-      `
-      <strong>${escapeHtml(currentBranch.bankName || "")}</strong><br>
-      Branch: ${escapeHtml(currentBranch.branchName || "")}<br>
-      IFSC: ${escapeHtml(currentBranch.ifscCode || "")}<br>
-      MICR: ${escapeHtml(currentBranch.micrCode || "")}<br>
-      Address: ${escapeHtml(currentBranch.branchAddress || "")}
-      `;
-
-  }else{
-
-    document.getElementById("branchText").textContent =
-      "All Branches";
-  }
-
-
-  if(currentRole === "retailer"){
-
-    document
-      .getElementById("branchesMenu")
-      .classList.add("hidden");
-
-    document
-      .getElementById("retailersMenu")
-      .classList.add("hidden");
-
-  }
-
-  showPage("dashboard");
-}
-
-
-/* =========================================================
-   PAGE NAVIGATION
-   ========================================================= */
-
-window.showPage = function(page){
-
-  const pages = [
-    "dashboard",
-    "branches",
-    "retailers",
-    "passbook"
-  ];
-
-  pages.forEach(p => {
-
-    const el =
-      document.getElementById(p + "Page");
-
-    if(el){
-
-      el.classList.toggle(
-        "hidden",
-        p !== page
-      );
-    }
-
-  });
-
-
-  const titles = {
-    dashboard: "Dashboard",
-    branches: "Branch Management",
-    retailers: "Retailers",
-    passbook: "Manual Passbook Print"
-  };
-
-  document.getElementById("pageTitle").textContent =
-    titles[page] || "Dashboard";
-
-  if(page === "branches")
-    loadBranches();
-
-  if(page === "retailers")
-    loadRetailers();
-
-  if(page === "passbook")
-    loadCustomers();
-
-};
-
-
-/* =========================================================
-   BRANCH SAVE
-   ========================================================= */
-
-window.saveBranch = async function(){
-
-  if(currentRole !== "admin"){
-
-    alert("Only Admin can manage branches.");
-
-    return;
-  }
-
-  const id =
-    document.getElementById("branchId").value.trim();
-
-  if(!id){
-
-    alert("Branch ID डालें।");
-
-    return;
-  }
-
-  const data = {
-
-    bankName:
-      document.getElementById("bankName").value.trim(),
-
-    branchName:
-      document.getElementById("branchName").value.trim(),
-
-    branchCode:
-      document.getElementById("branchCode").value.trim(),
-
-    ifscCode:
-      document.getElementById("ifscCode").value.trim(),
-
-    micrCode:
-      document.getElementById("micrCode").value.trim(),
-
-    branchAddress:
-      document.getElementById("branchAddress").value.trim(),
-
-    branchPhone:
-      document.getElementById("branchPhone").value.trim(),
-
-    nodalOfficer:
-      document.getElementById("nodalOfficer").value.trim(),
-
-    status: "active",
-
-    updatedAt: serverTimestamp()
-
-  };
-
-
-  try{
-
-    await setDoc(
-      doc(db,"branches",id),
-      data,
-      {merge:true}
-    );
-
-    alert("Branch saved successfully.");
-
-    await loadBranches();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(error.message);
-
-  }
-
-};
-
-
-/* =========================================================
-   LOAD BRANCHES
-   ========================================================= */
-
-async function loadBranches(){
-
-  if(!db) return;
-
-  const tbody =
-    document.getElementById("branchesTable");
-
-  if(!tbody) return;
-
-  tbody.innerHTML =
-    `<tr><td colspan="5">Loading...</td></tr>`;
-
-  try{
-
-    const snapshot =
-      await getDocs(
-        collection(db,"branches")
-      );
-
-    tbody.innerHTML = "";
-
-    const branchSelect =
-      document.getElementById("retailerBranch");
-
-    if(branchSelect){
-
-      branchSelect.innerHTML =
-        `<option value="">Select Branch</option>`;
+        return;
     }
 
 
-    snapshot.forEach(item => {
+    /* RETAILER CHECK */
 
-      const b = item.data();
+    const retailerRef = doc(db,"retailers",uid);
+    const retailerSnap = await getDoc(retailerRef);
 
-      const tr =
-        document.createElement("tr");
+    if(retailerSnap.exists()){
 
-      tr.innerHTML = `
-        <td>${escapeHtml(item.id)}</td>
-        <td>${escapeHtml(b.bankName || "")}</td>
-        <td>${escapeHtml(b.branchName || "")}</td>
-        <td>${escapeHtml(b.ifscCode || "")}</td>
-        <td>
-          <button
-            class="btn-secondary"
-            onclick="editBranch('${escapeAttr(item.id)}')">
-            Edit
-          </button>
-          <button
-            class="btn-danger"
-            onclick="deleteBranch('${escapeAttr(item.id)}')">
-            Delete
-          </button>
-        </td>
-      `;
+        currentRole = "retailer";
+        currentProfile = retailerSnap.data();
 
-      tbody.appendChild(tr);
+        if(currentProfile.status === "inactive"){
+            throw new Error("Retailer account inactive है।");
+        }
 
+        $("userName").textContent =
+            currentProfile.name || "Retailer";
 
-      if(branchSelect){
+        $("userRole").textContent = "Retailer";
 
-        const option =
-          document.createElement("option");
+        return;
+    }
 
-        option.value = item.id;
-
-        option.textContent =
-          b.branchName || item.id;
-
-        branchSelect.appendChild(option);
-      }
-
-    });
-
-  }catch(error){
-
-    console.error(error);
-
-    tbody.innerHTML =
-      `<tr><td colspan="5">${escapeHtml(error.message)}</td></tr>`;
-  }
-
+    throw new Error(
+        "इस Firebase user के लिए admins या retailers में profile नहीं मिला।"
+    );
 }
 
 
 /* =========================================================
-   EDIT BRANCH
+   INITIALIZE PORTAL
    ========================================================= */
 
-window.editBranch = async function(id){
+async function initializePortal(){
 
-  const snap =
-    await getDoc(
-      doc(db,"branches",id)
-    );
+    document.querySelectorAll(".admin-only")
+        .forEach(el => {
 
-  if(!snap.exists()) return;
+            el.style.display =
+                currentRole === "admin" ? "block" : "none";
 
-  const b = snap.data();
+        });
 
-  document.getElementById("branchId").value = id;
-  document.getElementById("bankName").value = b.bankName || "";
-  document.getElementById("branchName").value = b.branchName || "";
-  document.getElementById("branchCode").value = b.branchCode || "";
-  document.getElementById("ifscCode").value = b.ifscCode || "";
-  document.getElementById("micrCode").value = b.micrCode || "";
-  document.getElementById("branchAddress").value = b.branchAddress || "";
-  document.getElementById("branchPhone").value = b.branchPhone || "";
-  document.getElementById("nodalOfficer").value = b.nodalOfficer || "";
-
-};
-
-
-/* =========================================================
-   DELETE BRANCH
-   ========================================================= */
-
-window.deleteBranch = async function(id){
-
-  if(!confirm("Delete this branch?"))
-    return;
-
-  try{
-
-    await deleteDoc(
-      doc(db,"branches",id)
-    );
-
-    await loadBranches();
-
-  }catch(error){
-
-    alert(error.message);
-
-  }
-
-};
-
-
-/* =========================================================
-   RETAILER SAVE
-   ========================================================= */
-
-window.saveRetailer = async function(){
-
-  if(currentRole !== "admin"){
-
-    alert("Only Admin can manage retailers.");
-
-    return;
-  }
-
-  const uid =
-    document.getElementById("retailerUid").value.trim();
-
-  if(!uid){
-
-    alert("Retailer Firebase Auth UID डालें।");
-
-    return;
-  }
-
-  const branchId =
-    document.getElementById("retailerBranch").value;
-
-  if(!branchId){
-
-    alert("Branch select करें।");
-
-    return;
-  }
-
-  const branchSnap =
-    await getDoc(
-      doc(db,"branches",branchId)
-    );
-
-  if(!branchSnap.exists()){
-
-    alert("Selected branch नहीं मिली।");
-
-    return;
-  }
-
-  const branch =
-    branchSnap.data();
-
-  const data = {
-
-    name:
-      document.getElementById("retailerName").value.trim(),
-
-    email:
-      document.getElementById("retailerEmail").value.trim(),
-
-    phone:
-      document.getElementById("retailerPhone").value.trim(),
-
-    role: "retailer",
-
-    status: "active",
-
-    branchId: branchId,
-
-    branchName:
-      branch.branchName || "",
-
-    bankId: "PNB",
-
-    updatedAt: serverTimestamp()
-
-  };
-
-
-  try{
-
-    await setDoc(
-      doc(db,"retailers",uid),
-      data,
-      {merge:true}
-    );
-
-    alert("Retailer saved successfully.");
-
-    await loadRetailers();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(error.message);
-
-  }
-
-};
-
-
-/* =========================================================
-   LOAD RETAILERS
-   ========================================================= */
-
-async function loadRetailers(){
-
-  if(currentRole !== "admin")
-    return;
-
-  const tbody =
-    document.getElementById("retailersTable");
-
-  if(!tbody) return;
-
-  tbody.innerHTML =
-    `<tr><td colspan="4">Loading...</td></tr>`;
-
-  try{
-
-    const snapshot =
-      await getDocs(
-        collection(db,"retailers")
-      );
-
-    tbody.innerHTML = "";
-
-    snapshot.forEach(item => {
-
-      const r =
-        item.data();
-
-      const tr =
-        document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${escapeHtml(r.name || "")}</td>
-        <td>${escapeHtml(r.email || "")}</td>
-        <td>${escapeHtml(r.branchName || r.branchId || "")}</td>
-        <td>${escapeHtml(r.status || "")}</td>
-      `;
-
-      tbody.appendChild(tr);
-
-    });
-
-  }catch(error){
-
-    console.error(error);
-
-    tbody.innerHTML =
-      `<tr><td colspan="4">${escapeHtml(error.message)}</td></tr>`;
-  }
-
-}
-
-
-/* =========================================================
-   SAVE CUSTOMER
-   ========================================================= */
-
-window.saveCustomer = async function(){
-
-  if(!currentUser){
-
-    alert("Please login.");
-
-    return;
-  }
-
-  if(currentRole !== "retailer" && currentRole !== "admin"){
-
-    alert("Unauthorized.");
-
-    return;
-  }
-
-
-  let aadhaar =
-    document.getElementById("aadhaar").value
-    .replace(/\D/g,"");
-
-  let aadhaarMasked = "";
-
-  if(aadhaar.length >= 4){
-
-    aadhaarMasked =
-      "XXXX" +
-      aadhaar.slice(-4);
-
-  }
-
-
-  const data = {
-
-    retailerId:
-      currentUser.uid,
-
-    customerNo:
-      document.getElementById("customerNo").value.trim(),
-
-    accountNo:
-      document.getElementById("accountNo").value.trim(),
-
-    customerName:
-      document.getElementById("customerName").value.trim(),
-
-    accountOpenDate:
-      document.getElementById("accountOpenDate").value,
-
-    modeOperation:
-      document.getElementById("modeOperation").value,
-
-    relation:
-      document.getElementById("relation").value.trim(),
-
-    aadhaarMasked:
-      aadhaarMasked,
-
-    customerAddress:
-      document.getElementById("customerAddress").value.trim(),
-
-    nomination:
-      document.getElementById("nomination").value,
-
-    branchId:
-      currentBranch?.id || currentProfile?.branchId || "",
-
-    branchName:
-      currentBranch?.branchName || currentProfile?.branchName || "",
-
-    createdAt:
-      serverTimestamp()
-
-  };
-
-
-  try{
-
-    await addDoc(
-      collection(db,"customers"),
-      data
-    );
-
-    alert("Customer saved successfully.");
-
-    await loadCustomers();
-
-  }catch(error){
-
-    console.error(error);
-
-    alert(error.message);
-
-  }
-
-};
-
-
-/* =========================================================
-   LOAD CUSTOMERS
-   ========================================================= */
-
-async function loadCustomers(){
-
-  if(!currentUser)
-    return;
-
-  const tbody =
-    document.getElementById("customersTable");
-
-  if(!tbody) return;
-
-  tbody.innerHTML =
-    `<tr><td colspan="4">Loading...</td></tr>`;
-
-  try{
-
-    let snapshot;
 
     if(currentRole === "admin"){
 
-      snapshot =
-        await getDocs(
-          collection(db,"customers")
-        );
+        await loadBranches();
+        await loadRetailers();
+        await loadCustomers();
+
+        $("dashboardMessage").textContent =
+            "Admin Panel — Branch और Retailer management.";
 
     }else{
 
-      const q =
-        query(
-          collection(db,"customers"),
-          where(
-            "retailerId",
-            "==",
-            currentUser.uid
-          )
-        );
+        await loadAssignedBranch();
+        await loadCustomers();
 
-      snapshot =
-        await getDocs(q);
-
+        $("dashboardMessage").textContent =
+            "Retailer Panel — Assigned branch के customer passbook print करें.";
     }
 
-    tbody.innerHTML = "";
+    updateDashboard();
+}
 
-    snapshot.forEach(item => {
 
-      const c =
-        item.data();
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
 
-      const tr =
-        document.createElement("tr");
+document.querySelectorAll(".nav-btn")
+.forEach(button => {
 
-      tr.innerHTML = `
-        <td>${escapeHtml(c.customerName || "")}</td>
-        <td>${escapeHtml(c.accountNo || "")}</td>
-        <td>${escapeHtml(c.aadhaarMasked || "")}</td>
-        <td>
-          <button
-            class="btn-primary"
-            onclick="printSavedCustomer('${escapeAttr(item.id)}')">
-            Print
-          </button>
-        </td>
-      `;
+    button.addEventListener("click", async function(){
 
-      tbody.appendChild(tr);
+        const page = this.dataset.page;
+
+        if(
+            this.classList.contains("admin-only") &&
+            currentRole !== "admin"
+        ){
+            return;
+        }
+
+        document.querySelectorAll(".nav-btn")
+            .forEach(x => x.classList.remove("active"));
+
+        this.classList.add("active");
+
+        document.querySelectorAll(".page")
+            .forEach(x => x.classList.remove("active"));
+
+        const target = $("page-" + page);
+
+        if(target){
+            target.classList.add("active");
+        }
+
+        const titles = {
+            dashboard:"Dashboard",
+            branches:"Branches",
+            retailers:"Retailers",
+            passbook:"Passbook Print",
+            customers:"Customer Records"
+        };
+
+        $("pageTitle").textContent =
+            titles[page] || "Great India Passbook";
+
+        $("sidebar").classList.remove("open");
+
+        if(page === "branches"){
+            await loadBranches();
+        }
+
+        if(page === "retailers"){
+            await loadRetailers();
+        }
+
+        if(page === "customers"){
+            await loadCustomers();
+        }
 
     });
 
-  }catch(error){
-
-    console.error(error);
-
-    tbody.innerHTML =
-      `<tr><td colspan="4">${escapeHtml(error.message)}</td></tr>`;
-  }
-
-}
+});
 
 
 /* =========================================================
-   PRINT CURRENT CUSTOMER
+   MOBILE MENU
    ========================================================= */
 
-window.printPassbook = async function(){
+$("mobileMenu").addEventListener("click",function(){
 
-  await saveCustomer();
+    $("sidebar").classList.toggle("open");
 
-  buildPrintFromForm();
-
-  setTimeout(() => {
-
-    window.print();
-
-  },300);
-
-};
-
-
-function buildPrintFromForm(){
-
-  const branch =
-    currentBranch || {};
-
-  const customer = {
-
-    customerNo:
-      document.getElementById("customerNo").value,
-
-    accountNo:
-      document.getElementById("accountNo").value,
-
-    customerName:
-      document.getElementById("customerName").value,
-
-    accountOpenDate:
-      document.getElementById("accountOpenDate").value,
-
-    modeOperation:
-      document.getElementById("modeOperation").value,
-
-    relation:
-      document.getElementById("relation").value,
-
-    aadhaarMasked:
-      maskAadhaar(
-        document.getElementById("aadhaar").value
-      ),
-
-    address:
-      document.getElementById("customerAddress").value,
-
-    nomination:
-      document.getElementById("nomination").value
-
-  };
-
-  renderPrint(branch,customer);
-
-}
-
-
-/* =========================================================
-   PRINT SAVED CUSTOMER
-   ========================================================= */
-
-window.printSavedCustomer = async function(id){
-
-  const snap =
-    await getDoc(
-      doc(db,"customers",id)
-    );
-
-  if(!snap.exists()){
-
-    alert("Customer record not found.");
-
-    return;
-  }
-
-  const c =
-    snap.data();
-
-  let branch = currentBranch;
-
-  if(c.branchId){
-
-    const bs =
-      await getDoc(
-        doc(db,"branches",c.branchId)
-      );
-
-    if(bs.exists()){
-
-      branch = {
-        id: bs.id,
-        ...bs.data()
-      };
-
-    }
-
-  }
-
-  renderPrint(branch,c);
-
-  setTimeout(() => {
-
-    window.print();
-
-  },300);
-
-};
-
-
-/* =========================================================
-   RENDER PRINT
-   ========================================================= */
-
-function renderPrint(branch,customer){
-
-  const area =
-    document.getElementById("printArea");
-
-  area.innerHTML = `
-
-    <div class="print-page">
-
-      <div class="print-header">
-
-        <h2>
-          ${escapeHtml(branch.bankName || "Punjab National Bank")}
-        </h2>
-
-        <h3>
-          ${escapeHtml(branch.branchName || "")}
-        </h3>
-
-        <div>
-          IFSC: ${escapeHtml(branch.ifscCode || "")}
-          &nbsp;&nbsp;
-          MICR: ${escapeHtml(branch.micrCode || "")}
-        </div>
-
-        <div>
-          ${escapeHtml(branch.branchAddress || "")}
-        </div>
-
-        <div>
-          Phone: ${escapeHtml(branch.branchPhone || "")}
-        </div>
-
-      </div>
-
-
-      ${printRow(
-        "Mode of Operation",
-        customer.modeOperation || ""
-      )}
-
-      ${printRow(
-        "Customer Number",
-        customer.customerNo || ""
-      )}
-
-      ${printRow(
-        "Aadhaar",
-        customer.aadhaarMasked || ""
-      )}
-
-      ${printRow(
-        "Account Number",
-        customer.accountNo || ""
-      )}
-
-      ${printRow(
-        "Customer Name",
-        customer.customerName || ""
-      )}
-
-      ${printRow(
-        "Account Open Date",
-        customer.accountOpenDate || ""
-      )}
-
-      ${printRow(
-        "Relation",
-        customer.relation || ""
-      )}
-
-      ${printRow(
-        "Address",
-        customer.address || ""
-      )}
-
-      ${printRow(
-        "Nomination",
-        customer.nomination || ""
-      )}
-
-      ${printRow(
-        "Issue Date",
-        new Date().toLocaleDateString("en-IN")
-      )}
-
-
-      <div class="print-footer">
-
-        <strong>Nodal Officer:</strong>
-        ${escapeHtml(branch.nodalOfficer || "")}
-
-        <br><br>
-
-        DICGC insured subject to applicable rules.
-
-      </div>
-
-    </div>
-  `;
-
-}
-
-
-function printRow(label,value){
-
-  return `
-    <div class="print-row">
-      <div class="print-label">
-        ${escapeHtml(label)}
-      </div>
-      <div class="print-value">
-        ${escapeHtml(value)}
-      </div>
-    </div>
-  `;
-
-}
+});
 
 
 /* =========================================================
    LOGOUT
    ========================================================= */
 
-window.logout = async function(){
-
-  try{
+$("logoutBtn").addEventListener("click",async function(){
 
     await signOut(auth);
 
-    location.reload();
-
-  }catch(error){
-
-    alert(error.message);
-
-  }
-
-};
+});
 
 
 /* =========================================================
-   HELPERS
+   BRANCHES
    ========================================================= */
 
-function maskAadhaar(value){
+async function loadBranches(){
 
-  const digits =
-    String(value || "")
-    .replace(/\D/g,"");
+    if(currentRole !== "admin") return;
 
-  if(digits.length < 4)
-    return "";
+    try{
 
-  return "XXXX" + digits.slice(-4);
+        const snapshot =
+            await getDocs(collection(db,"branches"));
+
+        branchesCache = [];
+
+        snapshot.forEach(snap => {
+
+            branchesCache.push({
+                id:snap.id,
+                ...snap.data()
+            });
+
+        });
+
+        renderBranches();
+        populateBranchSelect();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Branches load नहीं हो सके:\n" +
+            error.message
+        );
+    }
+}
+
+
+function renderBranches(){
+
+    const tbody = $("branchTable");
+
+    tbody.innerHTML = "";
+
+    const search =
+        $("branchSearch").value.trim().toLowerCase();
+
+    const list = branchesCache.filter(branch => {
+
+        const text = `
+            ${branch.bankName || ""}
+            ${branch.branchName || ""}
+            ${branch.branchCode || ""}
+            ${branch.ifscCode || ""}
+        `.toLowerCase();
+
+        return text.includes(search);
+    });
+
+
+    list.forEach(branch => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>
+                <strong>${escapeHTML(branch.branchName)}</strong><br>
+                <small>${escapeHTML(branch.bankName)}</small>
+            </td>
+
+            <td>${escapeHTML(branch.branchCode)}</td>
+
+            <td>${escapeHTML(branch.ifscCode)}</td>
+
+            <td>${escapeHTML(branch.micrCode)}</td>
+
+            <td>
+                <span class="badge">
+                    ${escapeHTML(branch.status || "active")}
+                </span>
+            </td>
+
+            <td>
+                <div class="actions">
+
+                    <button class="primary"
+                        data-edit-branch="${branch.id}">
+                        Edit
+                    </button>
+
+                    <button class="danger"
+                        data-delete-branch="${branch.id}">
+                        Delete
+                    </button>
+
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+
+    document.querySelectorAll("[data-edit-branch]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            editBranch(this.dataset.editBranch);
+
+        });
+
+    });
+
+
+    document.querySelectorAll("[data-delete-branch]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            deleteBranch(this.dataset.deleteBranch);
+
+        });
+
+    });
 
 }
 
 
-function escapeHtml(value){
+$("branchSearch").addEventListener("input",renderBranches);
 
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+
+$("branchForm").addEventListener("submit",async function(e){
+
+    e.preventDefault();
+
+    if(currentRole !== "admin"){
+        alert("Only Admin can manage branches.");
+        return;
+    }
+
+    const id = $("branchId").value.trim();
+
+    const data = {
+
+        bankName:$("branchBankName").value.trim(),
+
+        branchName:$("branchName").value.trim(),
+
+        branchCode:$("branchCode").value.trim(),
+
+        ifscCode:$("ifscCode").value.trim(),
+
+        micrCode:$("micrCode").value.trim(),
+
+        branchAddress:$("branchAddress").value.trim(),
+
+        branchPhone:$("branchPhone").value.trim(),
+
+        tollFree:$("tollFree").value.trim(),
+
+        nodalOfficer:$("nodalOfficer").value.trim(),
+
+        status:$("branchStatus").value,
+
+        updatedAt:serverTimestamp()
+
+    };
+
+
+    try{
+
+        if(id){
+
+            await setDoc(
+                doc(db,"branches",id),
+                data,
+                {merge:true}
+            );
+
+            alert("Branch updated successfully.");
+
+        }else{
+
+            const newRef = doc(
+                collection(db,"branches")
+            );
+
+            data.createdAt = serverTimestamp();
+
+            await setDoc(
+                newRef,
+                data
+            );
+
+            alert("Branch created successfully.");
+        }
+
+        clearBranchForm();
+
+        await loadBranches();
+
+        updateDashboard();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Branch save failed:\n" +
+            error.message
+        );
+    }
+
+});
+
+
+function editBranch(id){
+
+    const branch =
+        branchesCache.find(x => x.id === id);
+
+    if(!branch) return;
+
+    $("branchId").value = id;
+
+    $("branchBankName").value =
+        branch.bankName || "";
+
+    $("branchName").value =
+        branch.branchName || "";
+
+    $("branchCode").value =
+        branch.branchCode || "";
+
+    $("ifscCode").value =
+        branch.ifscCode || "";
+
+    $("micrCode").value =
+        branch.micrCode || "";
+
+    $("branchAddress").value =
+        branch.branchAddress || "";
+
+    $("branchPhone").value =
+        branch.branchPhone || "";
+
+    $("tollFree").value =
+        branch.tollFree || "";
+
+    $("nodalOfficer").value =
+        branch.nodalOfficer || "";
+
+    $("branchStatus").value =
+        branch.status || "active";
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+}
+
+
+async function deleteBranch(id){
+
+    if(currentRole !== "admin") return;
+
+    if(!confirm("इस branch को delete करना है?")){
+        return;
+    }
+
+    try{
+
+        await deleteDoc(
+            doc(db,"branches",id)
+        );
+
+        await loadBranches();
+
+        alert("Branch deleted.");
+
+    }catch(error){
+
+        alert(
+            "Branch delete failed:\n" +
+            error.message
+        );
+    }
+}
+
+
+function clearBranchForm(){
+
+    $("branchForm").reset();
+
+    $("branchId").value = "";
+
+    $("branchBankName").value =
+        "Punjab National Bank";
+
+    $("branchStatus").value = "active";
+}
+
+$("clearBranch").addEventListener(
+    "click",
+    clearBranchForm
+);
+
+
+/* =========================================================
+   BRANCH SELECT
+   ========================================================= */
+
+function populateBranchSelect(){
+
+    const select = $("retailerBranch");
+
+    if(!select) return;
+
+    select.innerHTML =
+        `<option value="">Select Branch</option>`;
+
+    branchesCache
+        .filter(x => x.status !== "inactive")
+        .forEach(branch => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = branch.id;
+
+            option.textContent =
+                `${branch.branchName} (${branch.ifscCode || ""})`;
+
+            select.appendChild(option);
+
+        });
+}
+
+
+/* =========================================================
+   RETAILERS
+   ========================================================= */
+
+async function loadRetailers(){
+
+    if(currentRole !== "admin") return;
+
+    try{
+
+        const snapshot =
+            await getDocs(collection(db,"retailers"));
+
+        retailersCache = [];
+
+        snapshot.forEach(snap => {
+
+            retailersCache.push({
+                id:snap.id,
+                ...snap.data()
+            });
+
+        });
+
+        renderRetailers();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Retailers load failed:\n" +
+            error.message
+        );
+    }
+}
+
+
+function renderRetailers(){
+
+    const tbody = $("retailerTable");
+
+    tbody.innerHTML = "";
+
+    retailersCache.forEach(retailer => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>${escapeHTML(retailer.name)}</td>
+
+            <td>${escapeHTML(retailer.email)}</td>
+
+            <td>${escapeHTML(retailer.phone)}</td>
+
+            <td>
+                ${escapeHTML(
+                    retailer.branchName ||
+                    retailer.branchId ||
+                    ""
+                )}
+            </td>
+
+            <td>
+                <span class="badge">
+                    ${escapeHTML(retailer.status || "active")}
+                </span>
+            </td>
+
+            <td>
+
+                <div class="actions">
+
+                    <button class="primary"
+                        data-edit-retailer="${retailer.id}">
+                        Edit
+                    </button>
+
+                    <button class="danger"
+                        data-delete-retailer="${retailer.id}">
+                        Delete
+                    </button>
+
+                </div>
+
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    document.querySelectorAll("[data-edit-retailer]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            editRetailer(
+                this.dataset.editRetailer
+            );
+
+        });
+
+    });
+
+
+    document.querySelectorAll("[data-delete-retailer]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            deleteRetailer(
+                this.dataset.deleteRetailer
+            );
+
+        });
+
+    });
 
 }
 
 
-function escapeAttr(value){
+$("retailerForm").addEventListener("submit",async function(e){
 
-  return String(value ?? "")
-    .replace(/'/g,"&#039;");
+    e.preventDefault();
 
+    if(currentRole !== "admin"){
+        alert("Only Admin can manage retailers.");
+        return;
+    }
+
+    const id = $("retailerId").value.trim();
+
+    const branchId =
+        $("retailerBranch").value;
+
+    if(!branchId){
+
+        alert("Branch select करें.");
+
+        return;
+    }
+
+    const branch =
+        branchesCache.find(x => x.id === branchId);
+
+    if(!branch){
+
+        alert("Selected branch नहीं मिली.");
+
+        return;
+    }
+
+    const data = {
+
+        name:$("retailerName").value.trim(),
+
+        email:$("retailerEmail").value.trim(),
+
+        phone:$("retailerPhone").value.trim(),
+
+        role:"retailer",
+
+        status:$("retailerStatus").value,
+
+        branchId:branch.id,
+
+        branchName:branch.branchName,
+
+        bankId:"PNB",
+
+        updatedAt:serverTimestamp()
+
+    };
+
+
+    try{
+
+        if(!id){
+
+            alert(
+                "पहले Firebase Authentication में retailer user बनाकर उसका UID प्राप्त करें। फिर उसी UID को Retailer ID में इस्तेमाल करें।"
+            );
+
+            return;
+        }
+
+
+        await setDoc(
+            doc(db,"retailers",id),
+            data,
+            {merge:true}
+        );
+
+        alert("Retailer saved successfully.");
+
+        clearRetailerForm();
+
+        await loadRetailers();
+
+        updateDashboard();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Retailer save failed:\n" +
+            error.message
+        );
+    }
+
+});
+
+
+function editRetailer(id){
+
+    const retailer =
+        retailersCache.find(x => x.id === id);
+
+    if(!retailer) return;
+
+    $("retailerId").value = id;
+
+    $("retailerName").value =
+        retailer.name || "";
+
+    $("retailerEmail").value =
+        retailer.email || "";
+
+    $("retailerPhone").value =
+        retailer.phone || "";
+
+    $("retailerBranch").value =
+        retailer.branchId || "";
+
+    $("retailerStatus").value =
+        retailer.status || "active";
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
 }
 
 
-function showLogin(){
+async function deleteRetailer(id){
 
-  document
-    .getElementById("loginPage")
-    .classList.remove("hidden");
+    if(!confirm("इस retailer profile को delete करना है?")){
+        return;
+    }
 
-  document
-    .getElementById("appPage")
-    .classList.add("hidden");
+    try{
 
+        await deleteDoc(
+            doc(db,"retailers",id)
+        );
+
+        await loadRetailers();
+
+        alert("Retailer deleted.");
+
+    }catch(error){
+
+        alert(
+            "Retailer delete failed:\n" +
+            error.message
+        );
+    }
 }
 
 
-function showLoginError(message){
+function clearRetailerForm(){
 
-  const el =
-    document.getElementById("loginError");
+    $("retailerForm").reset();
 
-  if(!el) return;
+    $("retailerId").value = "";
 
-  el.textContent = message;
+    $("retailerStatus").value = "active";
+}
 
-  el.classList.remove("hidden");
+$("clearRetailer").addEventListener(
+    "click",
+    clearRetailerForm
+);
 
+
+/* =========================================================
+   RETAILER ASSIGNED BRANCH
+   ========================================================= */
+
+async function loadAssignedBranch(){
+
+    if(currentRole !== "retailer") return;
+
+    const branchId =
+        currentProfile.branchId;
+
+    if(!branchId){
+
+        $("assignedBranchBox").innerHTML =
+            `<div class="notice">
+                Admin ने अभी कोई branch assign नहीं की है.
+             </div>`;
+
+        $("retailerBranchNotice").textContent =
+            "Admin ने अभी branch assign नहीं की है.";
+
+        return;
+    }
+
+    try{
+
+        const snap =
+            await getDoc(
+                doc(db,"branches",branchId)
+            );
+
+        if(!snap.exists()){
+
+            throw new Error(
+                "Assigned branch Firestore में नहीं मिली."
+            );
+        }
+
+        currentBranch = {
+            id:snap.id,
+            ...snap.data()
+        };
+
+        renderAssignedBranch();
+
+    }catch(error){
+
+        console.error(error);
+
+        $("assignedBranchBox").innerHTML =
+            `<div class="notice">
+                ${escapeHTML(error.message)}
+             </div>`;
+
+        $("retailerBranchNotice").textContent =
+            error.message;
+    }
 }
 
 
-function hideLoginMessages(){
+function renderAssignedBranch(){
 
-  document
-    .getElementById("loginError")
-    .classList.add("hidden");
+    if(!currentBranch) return;
 
-  document
-    .getElementById("loginSuccess")
-    .classList.add("hidden");
+    $("assignedBranchBox").innerHTML = `
 
-}
+        <strong>
+            ${escapeHTML(currentBranch.bankName)}
+        </strong>
 
+        <br>
 
-function getFirebaseError(error){
+        Branch:
+        ${escapeHTML(currentBranch.branchName)}
 
-  const code =
-    error?.code || "";
+        <br>
 
-  if(
-    code.includes("auth/api-key-not-valid")
-  ){
+        Branch Code:
+        ${escapeHTML(currentBranch.branchCode)}
 
-    return `
-      Firebase API Key invalid है।
-      Google Cloud → APIs & Services → Credentials में
-      Firebase Browser key की restrictions और key status check करें।
+        <br>
+
+        IFSC:
+        ${escapeHTML(currentBranch.ifscCode)}
+
+        <br>
+
+        MICR:
+        ${escapeHTML(currentBranch.micrCode)}
+
+        <br>
+
+        Address:
+        ${escapeHTML(currentBranch.branchAddress)}
+
     `;
 
-  }
 
-  if(
-    code.includes("auth/invalid-credential") ||
-    code.includes("auth/invalid-login-credentials")
-  ){
+    $("retailerBranchNotice").innerHTML = `
 
-    return "Email या Password गलत है।";
+        <strong>
+            Assigned Branch:
+            ${escapeHTML(currentBranch.branchName)}
+        </strong>
 
-  }
+        <br>
 
-  if(
-    code.includes("auth/user-not-found")
-  ){
+        IFSC:
+        ${escapeHTML(currentBranch.ifscCode)}
 
-    return "यह Firebase Auth user नहीं मिला।";
+        |
+        MICR:
+        ${escapeHTML(currentBranch.micrCode)}
 
-  }
+        <br>
 
-  if(
-    code.includes("auth/wrong-password")
-  ){
+        ${escapeHTML(currentBranch.branchAddress)}
 
-    return "Password गलत है।";
+    `;
+}
 
-  }
 
-  if(
-    code.includes("auth/invalid-api-key")
-  ){
+/* =========================================================
+   CUSTOMERS
+   ========================================================= */
 
-    return "Firebase API key invalid है।";
+async function loadCustomers(){
 
-  }
+    if(!currentUser) return;
 
-  return error?.message || "Login failed.";
+    try{
+
+        let snapshot;
+
+        if(currentRole === "admin"){
+
+            snapshot =
+                await getDocs(
+                    collection(db,"customers")
+                );
+
+        }else{
+
+            const q =
+                query(
+                    collection(db,"customers"),
+                    where(
+                        "retailerId",
+                        "==",
+                        currentUser.uid
+                    )
+                );
+
+            snapshot =
+                await getDocs(q);
+        }
+
+
+        customersCache = [];
+
+        snapshot.forEach(snap => {
+
+            customersCache.push({
+                id:snap.id,
+                ...snap.data()
+            });
+
+        });
+
+        customersCache.sort(
+            (a,b) =>
+                (b.createdAt?.seconds || 0) -
+                (a.createdAt?.seconds || 0)
+        );
+
+        renderCustomers();
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Customer records load failed:\n" +
+            error.message
+        );
+    }
+}
+
+
+function renderCustomers(){
+
+    const tbody = $("customerTable");
+
+    tbody.innerHTML = "";
+
+    const search =
+        $("customerSearch").value
+        .trim()
+        .toLowerCase();
+
+
+    customersCache
+    .filter(customer => {
+
+        const text = `
+            ${customer.customerName || ""}
+            ${customer.accountNo || ""}
+            ${customer.customerNo || ""}
+            ${customer.branchName || ""}
+        `.toLowerCase();
+
+        return text.includes(search);
+
+    })
+    .forEach(customer => {
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>
+                ${escapeHTML(customer.customerName)}
+            </td>
+
+            <td>
+                ${escapeHTML(customer.accountNo)}
+            </td>
+
+            <td>
+                ${escapeHTML(customer.customerNo)}
+            </td>
+
+            <td>
+                ${escapeHTML(customer.branchName)}
+            </td>
+
+            <td>
+                ${escapeHTML(customer.issueDate)}
+            </td>
+
+            <td>
+
+                <div class="actions">
+
+                    <button class="primary"
+                        data-print-customer="${customer.id}">
+                        Print
+                    </button>
+
+                    <button class="danger"
+                        data-delete-customer="${customer.id}">
+                        Delete
+                    </button>
+
+                </div>
+
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    document.querySelectorAll("[data-print-customer]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            printSavedCustomer(
+                this.dataset.printCustomer
+            );
+
+        });
+
+    });
+
+
+    document.querySelectorAll("[data-delete-customer]")
+    .forEach(button => {
+
+        button.addEventListener("click",function(){
+
+            deleteCustomer(
+                this.dataset.deleteCustomer
+            );
+
+        });
+
+    });
 
 }
+
+
+$("customerSearch").addEventListener(
+    "input",
+    renderCustomers
+);
+
+
+/* =========================================================
+   SAVE CUSTOMER
+   ========================================================= */
+
+$("customerForm").addEventListener(
+    "submit",
+    async function(e){
+
+        e.preventDefault();
+
+        await saveCustomer(false);
+
+    }
+);
+
+
+$("savePrintBtn").addEventListener(
+    "click",
+    async function(){
+
+        await saveCustomer(true);
+
+    }
+);
+
+
+async function saveCustomer(printAfter){
+
+    if(!currentUser) return;
+
+    if(currentRole === "retailer" && !currentBranch){
+
+        alert(
+            "Assigned branch उपलब्ध नहीं है."
+        );
+
+        return;
+    }
+
+
+    const customerId =
+        $("customerId").value.trim();
+
+
+    const branch =
+        currentRole === "admin"
+            ? getAdminSelectedBranch()
+            : currentBranch;
+
+
+    if(!branch){
+
+        alert(
+            "Branch information उपलब्ध नहीं है."
+        );
+
+        return;
+    }
+
+
+    const accountNo =
+        $("accountNo").value.trim();
+
+    const customerName =
+        $("customerName").value.trim();
+
+
+    if(!accountNo || !customerName){
+
+        alert(
+            "Account Number और Customer Name required हैं."
+        );
+
+        return;
+    }
+
+
+    /*
+       IMPORTANT:
+       Aadhaar full number store नहीं किया जा रहा।
+       User को masked value जैसे XXXX4503 ही डालना चाहिए.
+    */
+
+    const data = {
+
+        customerNo:
+            $("customerNo").value.trim(),
+
+        accountNo:accountNo,
+
+        customerName:customerName,
+
+        aadhaar:
+            $("aadhaar").value.trim(),
+
+        accountOpenDate:
+            $("accountOpenDate").value,
+
+        issueDate:
+            $("issueDate").value || today(),
+
+        modeOfOperation:
+            $("modeOfOperation").value,
+
+        relation:
+            $("relation").value.trim(),
+
+        address:
+            $("address").value.trim(),
+
+        nomination:
+            $("nomination").value,
+
+        retailerId:
+            currentUser.uid,
+
+        retailerName:
+            currentProfile?.name || "",
+
+        branchId:
+            branch.id,
+
+        branchName:
+            branch.branchName,
+
+        bankName:
+            branch.bankName,
+
+        branchCode:
+            branch.branchCode,
+
+        ifscCode:
+            branch.ifscCode,
+
+        micrCode:
+            branch.micrCode,
+
+        branchAddress:
+            branch.branchAddress,
+
+        branchPhone:
+            branch.branchPhone,
+
+        tollFree:
+            branch.tollFree,
+
+        nodalOfficer:
+            branch.nodalOfficer,
+
+        updatedAt:
+            serverTimestamp()
+
+    };
+
+
+    try{
+
+        let savedId = customerId;
+
+
+        if(customerId){
+
+            await setDoc(
+                doc(db,"customers",customerId),
+                data,
+                {merge:true}
+            );
+
+        }else{
+
+            data.createdAt =
+                serverTimestamp();
+
+            const ref =
+                await addDoc(
+                    collection(db,"customers"),
+                    data
+                );
+
+            savedId = ref.id;
+        }
+
+
+        await loadCustomers();
+
+        updateDashboard();
+
+        if(printAfter){
+
+            const saved =
+                customersCache.find(
+                    x => x.id === savedId
+                );
+
+            if(saved){
+
+                renderPrint(saved);
+
+                setTimeout(
+                    () => window.print(),
+                    300
+                );
+            }
+
+        }else{
+
+            alert("Customer saved successfully.");
+
+            clearCustomerForm();
+        }
+
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Customer save failed:\n" +
+            error.message
+        );
+    }
+}
+
+
+/* =========================================================
+   ADMIN BRANCH HELPER
+   ========================================================= */
+
+function getAdminSelectedBranch(){
+
+    /*
+       Admin passbook print में अभी currentBranch
+       नहीं है। इसलिए अगर Admin को print करना हो,
+       branch list में पहली active branch इस्तेमाल होगी।
+    */
+
+    return branchesCache.find(
+        x => x.status !== "inactive"
+    ) || null;
+}
+
+
+/* =========================================================
+   PRINT CUSTOMER
+   ========================================================= */
+
+function printSavedCustomer(id){
+
+    const customer =
+        customersCache.find(
+            x => x.id === id
+        );
+
+    if(!customer) return;
+
+    renderPrint(customer);
+
+    setTimeout(
+        () => window.print(),
+        300
+    );
+}
+
+
+function renderPrint(customer){
+
+    const maskedAadhaar =
+        customer.aadhaar || "XXXX";
+
+    $("printArea").innerHTML = `
+
+        <div class="passbook-print">
+
+            <div class="print-header">
+
+                <h2>
+                    ${escapeHTML(
+                        customer.bankName ||
+                        "Punjab National Bank"
+                    )}
+                </h2>
+
+                <h3>
+                    ${escapeHTML(
+                        customer.branchName || ""
+                    )}
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                        customer.branchAddress || ""
+                    )}
+                </p>
+
+                <p>
+                    IFSC:
+                    ${escapeHTML(
+                        customer.ifscCode || ""
+                    )}
+                    &nbsp;&nbsp;
+
+                    MICR:
+                    ${escapeHTML(
+                        customer.micrCode || ""
+                    )}
+                </p>
+
+                <p>
+                    Phone:
+                    ${escapeHTML(
+                        customer.branchPhone || ""
+                    )}
+
+                    &nbsp;&nbsp;
+
+                    Toll Free:
+                    ${escapeHTML(
+                        customer.tollFree || ""
+                    )}
+                </p>
+
+                <p>
+                    Nodal Officer:
+                    ${escapeHTML(
+                        customer.nodalOfficer || ""
+                    )}
+                </p>
+
+            </div>
+
+
+            <div class="print-section-title">
+                CUSTOMER / ACCOUNT DETAILS
+            </div>
+
+
+            <table class="print-table">
+
+                <tr>
+
+                    <td class="label">
+                        Customer No.
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.customerNo || ""
+                        )}
+                    </td>
+
+                    <td class="label">
+                        Account No.
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.accountNo || ""
+                        )}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td class="label">
+                        Customer Name
+                    </td>
+
+                    <td colspan="3">
+                        ${escapeHTML(
+                            customer.customerName || ""
+                        )}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td class="label">
+                        Aadhaar
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            maskedAadhaar
+                        )}
+                    </td>
+
+                    <td class="label">
+                        Mode of Operation
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.modeOfOperation || ""
+                        )}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td class="label">
+                        Account Open Date
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.accountOpenDate || ""
+                        )}
+                    </td>
+
+                    <td class="label">
+                        Issue Date
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.issueDate || ""
+                        )}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td class="label">
+                        Relation
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.relation || ""
+                        )}
+                    </td>
+
+                    <td class="label">
+                        Nomination
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            customer.nomination || ""
+                        )}
+                    </td>
+
+                </tr>
+
+
+                <tr>
+
+                    <td class="label">
+                        Address
+                    </td>
+
+                    <td colspan="3">
+                        ${escapeHTML(
+                            customer.address || ""
+                        )}
+                    </td>
+
+                </tr>
+
+            </table>
+
+
+            <div class="print-footer">
+
+                <p>
+                    Deposit Insurance and Credit Guarantee Corporation
+                    (DICGC) cover is subject to applicable rules.
+                </p>
+
+                <p>
+                    This document is generated through
+                    Great India Passbook Retailer Portal.
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+
+/* =========================================================
+   DELETE CUSTOMER
+   ========================================================= */
+
+async function deleteCustomer(id){
+
+    if(!confirm(
+        "इस customer record को delete करना है?"
+    )){
+        return;
+    }
+
+    const customer =
+        customersCache.find(
+            x => x.id === id
+        );
+
+    if(!customer) return;
+
+
+    if(
+        currentRole !== "admin" &&
+        customer.retailerId !== currentUser.uid
+    ){
+
+        alert("Permission denied.");
+
+        return;
+    }
+
+
+    try{
+
+        await deleteDoc(
+            doc(db,"customers",id)
+        );
+
+        await loadCustomers();
+
+        updateDashboard();
+
+        alert("Customer record deleted.");
+
+    }catch(error){
+
+        console.error(error);
+
+        alert(
+            "Delete failed:\n" +
+            error.message
+        );
+    }
+}
+
+
+/* =========================================================
+   CLEAR CUSTOMER
+   ========================================================= */
+
+function clearCustomerForm(){
+
+    $("customerForm").reset();
+
+    $("customerId").value = "";
+
+    $("issueDate").value = today();
+
+}
+
+$("clearCustomer").addEventListener(
+    "click",
+    clearCustomerForm
+);
+
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+function updateDashboard(){
+
+    $("branchCount").textContent =
+        branchesCache.length;
+
+    $("retailerCount").textContent =
+        retailersCache.length;
+
+    $("customerCount").textContent =
+        customersCache.length;
+
+
+    if(currentRole === "admin"){
+
+        $("assignedBranchBox").innerHTML = `
+            <strong>Admin Access</strong>
+            <br>
+            आप सभी active branches और retailers manage कर सकते हैं.
+        `;
+
+    }else{
+
+        if(currentBranch){
+
+            renderAssignedBranch();
+
+        }else{
+
+            $("assignedBranchBox").innerHTML =
+                `<div class="notice">
+                    No branch assigned.
+                 </div>`;
+        }
+    }
+}
+
+
+/* =========================================================
+   DEFAULT DATE
+   ========================================================= */
+
+$("issueDate").value = today();
+
+
+/* =========================================================
+   FIREBASE ERROR HANDLING
+   ========================================================= */
+
+window.addEventListener(
+    "unhandledrejection",
+    function(event){
+
+        console.error(
+            "Unhandled Firebase error:",
+            event.reason
+        );
+
+    }
+);
 
 </script>
 
