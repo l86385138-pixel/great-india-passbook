@@ -3499,148 +3499,221 @@ function renderCustomFormat(customer, format){
         ISSUE_DATE: formatPrintDate(customer.issueDate)
     };
 
-    // Keep the complete uploaded HTML. Do not extract body.innerHTML because
-    // that removes the bank's <head>/<style> and can make fixed-position forms blank.
-    let source = sanitizeTemplateHTML(format.templateHtml);
     const esc = v => escapeHTML(String(v ?? ""));
+    let source = sanitizeTemplateHTML(format.templateHtml);
+
+    // Placeholder based formats: replace every supported placeholder before loading.
     Object.entries(values).forEach(([k,v])=>{
-        const re = new RegExp("\\{\\{\\s*"+k+"\\s*\\}\\}","g");
+        const re = new RegExp("\\{\\{\\s*"+k+"\\s*\\}\\}","gi");
         source = source.replace(re, esc(v));
     });
 
-    // Remove the template's own interactive print controls before loading it.
     const parser = new DOMParser();
     const doc = parser.parseFromString(source, "text/html");
     if(!doc.body) return false;
-    doc.querySelectorAll("script,button,.print-btn,[type=button],[type=submit]").forEach(el=>el.remove());
 
-    const isUnion = /union\\s*bank/i.test(String(format.bankName || "")) ||
-                    /union\\s*bank/i.test(doc.documentElement.textContent || "");
+    // Never allow the uploaded format to execute its own JavaScript or show its
+    // own print button inside the portal print window.
+    doc.querySelectorAll("script,button,.print-btn,[type=button],[type=submit],iframe,object,embed").forEach(el=>el.remove());
 
-    // A bank format is printed in an isolated iframe. This is important because
-    // the main portal has @media print rules that otherwise hide the uploaded form.
-    let frame = document.getElementById("formatPrintFrame");
+    const allText = (doc.body.textContent || "") + " " + (format.bankName || "");
+    const isUnion = /union\\s*bank/i.test(allText);
+
+    // ------------------------------------------------------------------
+    // UNION BANK FIX
+    // ------------------------------------------------------------------
+    // The original Union Bank file is a visual form made with <input> and
+    // <textarea>. Browser print engines can render those controls differently
+    // and can split/space their text. For Union Bank we replace the controls
+    // with normal text elements, while preserving the original CSS/classes.
+    // This makes the value appear directly beside its label:
+    //   Branch       UNION BANK OF INDIA - DAUDNAGAR
+    //   Account No   1735005582562212
+    //   नाम i)       MR RAHUL KUMAR
+    // etc.
+    if(isUnion){
+        const inputs = Array.from(doc.body.querySelectorAll("input"));
+        const textareas = Array.from(doc.body.querySelectorAll("textarea"));
+
+        const branchDisplay = [values.BANK_NAME, values.BRANCH_NAME]
+            .filter(Boolean).join(" - ");
+
+        const unionValues = [
+            branchDisplay,                 // 0 Branch
+            values.BRANCH_ADDRESS,         // 1 Branch Address
+            values.BRANCH_PHONE,           // 2 Branch Phone
+            values.ACCOUNT_NO,             // 3 Account No
+            values.NAME,                   // 4 Name i)
+            "",                            // 5 Name ii)
+            "",                            // 6 Name iii)
+            values.OCCUPATION,             // 7 Occupation
+            values.ACCOUNT_OPEN_DATE,      // 8 Opening Date
+            "",                            // 9 Yes checkbox
+            ""                             // 10 No checkbox
+        ];
+
+        function textReplacement(el, value, extraClass=""){
+            const span = doc.createElement("span");
+            span.className = ((el.getAttribute("class") || "") + " print-value " + extraClass).trim();
+            span.textContent = String(value ?? "");
+            // Preserve the input's visual width/height and underline.
+            const cs = el.getAttribute("style");
+            if(cs) span.setAttribute("style", cs);
+            span.style.display = "inline-block";
+            span.style.verticalAlign = "middle";
+            span.style.color = "#000";
+            span.style.webkitTextFillColor = "#000";
+            span.style.opacity = "1";
+            span.style.whiteSpace = "pre-wrap";
+            return span;
+        }
+
+        inputs.forEach((el, i)=>{
+            const value = unionValues[i] ?? "";
+            // Keep the two nomination boxes as visible check marks only.
+            if(i === 9 || i === 10){
+                const nom = String(values.NOMINATION || "").toLowerCase();
+                const yes = /yes|registered|हाँ|ha/.test(nom);
+                const no = /no|not registered|नहीं|nahi/.test(nom);
+                const mark = i === 9 ? (yes ? "✓" : "") : (no ? "✓" : "");
+                const span = textReplacement(el, mark, "nomination-mark");
+                span.style.width = "42px";
+                span.style.textAlign = "center";
+                el.replaceWith(span);
+            }else{
+                el.replaceWith(textReplacement(el, value));
+            }
+        });
+
+        textareas.forEach((el)=>{
+            const span = doc.createElement("div");
+            span.className = ((el.getAttribute("class") || "") + " print-textarea-value").trim();
+            span.textContent = String(values.ADDRESS || "");
+            span.style.whiteSpace = "pre-wrap";
+            span.style.wordBreak = "break-word";
+            span.style.color = "#000";
+            span.style.webkitTextFillColor = "#000";
+            span.style.font = "inherit";
+            span.style.width = "700px";
+            span.style.minHeight = "62px";
+            span.style.height = "62px";
+            span.style.padding = "5px";
+            span.style.border = "1px solid #aaa";
+            span.style.display = "block";
+            el.replaceWith(span);
+        });
+
+        // Make the date and values readable as ordinary text in print.
+        const unionPrintCSS = doc.createElement("style");
+        unionPrintCSS.id = "__great_india_union_print_fix";
+        unionPrintCSS.textContent = `
+            .print-value{
+                color:#000 !important;
+                -webkit-text-fill-color:#000 !important;
+                opacity:1 !important;
+                font:inherit !important;
+            }
+            .nomination-mark{
+                min-width:42px;
+                height:25px;
+                line-height:25px;
+            }
+            .print-textarea-value{
+                color:#000 !important;
+                -webkit-text-fill-color:#000 !important;
+            }
+            @media print{
+                html,body{
+                    margin:0 !important;
+                    padding:0 !important;
+                    background:#fff !important;
+                }
+                .page{
+                    margin:0 !important;
+                    border:0 !important;
+                    transform:none !important;
+                }
+            }
+        `;
+        doc.head.appendChild(unionPrintCSS);
+    }
+
+    // Generic uploaded formats: support normal controls without depending on
+    // their live .value property being serialized by the browser.
+    if(!isUnion){
+        const inputs = Array.from(doc.body.querySelectorAll("input"));
+        const textareas = Array.from(doc.body.querySelectorAll("textarea"));
+        const vals = [
+            values.BRANCH_NAME,
+            values.BRANCH_ADDRESS,
+            values.BRANCH_PHONE,
+            values.ACCOUNT_NO,
+            values.NAME,
+            values.OCCUPATION,
+            values.ACCOUNT_OPEN_DATE,
+            values.FATHER_NAME,
+            values.ADDRESS,
+            values.ISSUE_DATE
+        ];
+
+        function setControl(el, value){
+            const v=String(value ?? "");
+            if(el.tagName.toLowerCase()==="textarea"){
+                el.textContent=v;
+                el.value=v;
+                return;
+            }
+            el.value=v;
+            el.setAttribute("value",v);
+        }
+        inputs.forEach((el,i)=>{ if(i<vals.length) setControl(el,vals[i]); });
+        if(textareas[0]) setControl(textareas[0],values.ADDRESS);
+
+        // Remove placeholders so blank controls don't print misleading hints.
+        doc.querySelectorAll("input,textarea").forEach(el=>el.removeAttribute("placeholder"));
+    }
+
+    // Isolated iframe: portal's own @media print CSS can never hide this document.
+    let frame=document.getElementById("formatPrintFrame");
     if(frame) frame.remove();
-    frame = document.createElement("iframe");
-    frame.id = "formatPrintFrame";
+    frame=document.createElement("iframe");
+    frame.id="formatPrintFrame";
     frame.setAttribute("aria-hidden","true");
-    frame.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;z-index:-1;";
+    frame.style.cssText="position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;z-index:-1;";
     document.body.appendChild(frame);
 
-    const pageSize = String(format.pageSize || (isUnion ? "A4" : "A4")).toUpperCase();
-    const orientation = String(format.orientation || (isUnion ? "landscape" : "portrait")).toLowerCase();
+    const pageSize=String(format.pageSize || "A4").toUpperCase();
+    const orientation=String(format.orientation || (isUnion ? "landscape" : "portrait")).toLowerCase();
 
-    // Make the uploaded document print exactly as uploaded. Only page setup and
-    // safe print cleanup are added; the bank's own CSS is otherwise untouched.
-    const printStyle = doc.createElement("style");
-    printStyle.id = "__great_india_print_style";
-    printStyle.textContent = `
-        @media print {
-            @page { size: ${pageSize} ${orientation}; margin: 0 !important; }
-            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-            .print-btn, button, [type="button"], [type="submit"] { display:none !important; }
-            input, textarea, select { color:#000 !important; -webkit-text-fill-color:#000 !important; opacity:1 !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    const printStyle=doc.createElement("style");
+    printStyle.id="__great_india_print_style";
+    printStyle.textContent=`
+        @media print{
+            @page{size:${pageSize} ${orientation};margin:0 !important;}
+            html,body{margin:0 !important;padding:0 !important;background:#fff !important;}
+            .print-btn,button,[type="button"],[type="submit"]{display:none !important;}
+            *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
         }
     `;
     doc.head.appendChild(printStyle);
 
-    // IMPORTANT: set both the live value and the value attribute. When the HTML
-    // is printed through a new document, only the serialized attribute is reliable.
-    frame.onload = function(){
+    frame.onload=function(){
         try{
-            const d = frame.contentDocument;
-            if(!d || !d.body) throw new Error("Print format document could not be loaded.");
-
-            const inputs = Array.from(d.querySelectorAll("input"));
-            const textareas = Array.from(d.querySelectorAll("textarea"));
-            const selects = Array.from(d.querySelectorAll("select"));
-
-            function setInput(el, value){
-                if(!el) return;
-                const v = String(value ?? "");
-                el.value = v;
-                el.setAttribute("value", v);
-                el.removeAttribute("placeholder");
-            }
-            function setTextarea(el, value){
-                if(!el) return;
-                const v = String(value ?? "");
-                el.value = v;
-                el.textContent = v;
-            }
-
-            if(isUnion){
-                // Union Bank supplied format field order:
-                // 0 Branch, 1 Branch Address, 2 Phone, 3 Account No,
-                // 4/5/6 Name i/ii/iii, 7 Occupation, 8 Opening Date,
-                // 9 Nomination Yes, 10 Nomination No.
-                setInput(inputs[0], values.BRANCH_NAME);
-                setInput(inputs[1], values.BRANCH_ADDRESS);
-                setInput(inputs[2], values.BRANCH_PHONE);
-                setInput(inputs[3], values.ACCOUNT_NO);
-                setInput(inputs[4], values.NAME);
-                setInput(inputs[5], "");
-                setInput(inputs[6], "");
-                setInput(inputs[7], values.OCCUPATION);
-                setInput(inputs[8], values.ACCOUNT_OPEN_DATE);
-
-                const nom = String(values.NOMINATION || "").toLowerCase();
-                setInput(inputs[9], /yes|registered|हाँ|ha/.test(nom) ? "✓" : "");
-                setInput(inputs[10], /no|not registered|नहीं|nahi/.test(nom) ? "✓" : "");
-                setTextarea(textareas[0], values.ADDRESS);
-            }else{
-                // Generic bank form: placeholders are preferred. If the uploaded
-                // format has ordinary form controls, fill them by common order.
-                const vals = [
-                    values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
-                    values.ACCOUNT_NO, values.NAME, values.OCCUPATION,
-                    values.ACCOUNT_OPEN_DATE, values.FATHER_NAME, values.ADDRESS,
-                    values.ISSUE_DATE
-                ];
-                inputs.forEach((el,i)=>{ if(i < vals.length) setInput(el, vals[i]); });
-                if(textareas[0]) setTextarea(textareas[0], values.ADDRESS);
-                selects.forEach(sel=>{
-                    const text = (sel.value || sel.getAttribute("value") || "").toLowerCase();
-                    if(/mode/.test(sel.id || "")){
-                        const opt = Array.from(sel.options).find(o=>String(o.value).toUpperCase()===String(values.MODE).toUpperCase());
-                        if(opt) sel.value = opt.value;
-                    }
-                });
-            }
-
-            // For templates using labels instead of placeholders, replace the
-            // remaining visible placeholder text after controls are populated.
-            d.body.innerHTML = d.body.innerHTML
-                .replace(/\\{\\{\\s*BANK_NAME\\s*\\}\\}/gi, esc(values.BANK_NAME))
-                .replace(/\\{\\{\\s*BRANCH_NAME\\s*\\}\\}/gi, esc(values.BRANCH_NAME));
-
-            // Re-apply input values after serialization above.
-            if(isUnion){
-                const ins = Array.from(d.querySelectorAll("input"));
-                const tas = Array.from(d.querySelectorAll("textarea"));
-                [values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
-                 values.ACCOUNT_NO, values.NAME, "", "", values.OCCUPATION,
-                 values.ACCOUNT_OPEN_DATE].forEach((v,i)=>setInput(ins[i],v));
-                setInput(ins[9], /yes|registered|हाँ|ha/.test(String(values.NOMINATION).toLowerCase()) ? "✓" : "");
-                setInput(ins[10], /no|not registered|नहीं|nahi/.test(String(values.NOMINATION).toLowerCase()) ? "✓" : "");
-                setTextarea(tas[0], values.ADDRESS);
-            }
-
-            // Give the browser a moment to apply the bank CSS and layout before print.
+            const win=frame.contentWindow;
+            if(!win) throw new Error("Print window unavailable.");
             setTimeout(()=>{
-                frame.contentWindow.focus();
-                frame.contentWindow.print();
-                setTimeout(()=>frame.remove(), 1500);
-            }, 250);
+                win.focus();
+                win.print();
+                setTimeout(()=>frame.remove(),1800);
+            },350);
         }catch(err){
-            console.error("Custom format print error:", err);
+            console.error("Custom format print error:",err);
             frame.remove();
-            alert("Passbook format print failed:\n" + err.message);
+            alert("Passbook format print failed:\n"+err.message);
         }
     };
 
-    frame.srcdoc = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+    frame.srcdoc="<!DOCTYPE html>"+doc.documentElement.outerHTML;
     return true;
 }
 
