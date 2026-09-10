@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Union Bank of India - Passbook</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;color:#000;font-family:Arial,"Noto Sans Devanagari",sans-serif}
+.page{width:1123px;min-height:794px;margin:0 auto;padding:34px 70px 28px 70px;background:#fff;font-size:16px;line-height:1.35;overflow:hidden}
+.header{width:100%;margin-bottom:30px;white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+.bank-name{font-size:31px;font-weight:700;letter-spacing:.1px;white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+.bank-sub{font-size:20px;margin-top:2px;white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+.tagline{font-size:16px;margin-top:2px;white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+.form-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
+.form-table td{padding:7px 0;vertical-align:top;border:0}
+.label-cell{width:300px;padding-right:28px!important;font-weight:700;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+.value-cell{width:auto;padding-left:0!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+.value{display:block;min-height:22px;font-weight:600;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+.name-table,.address-table,.bottom-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.name-table td,.address-table td,.bottom-table td{border:0;vertical-align:top;padding:7px 0}
+.name-label{width:300px;font-weight:700;padding-right:28px!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+.name-value{font-weight:600;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+.address-label{width:300px;font-weight:700;padding-right:28px!important}
+.address-value{font-weight:600;white-space:pre-wrap!important;word-break:normal!important;overflow-wrap:normal!important;min-height:62px}
+.bottom-table{margin-top:12px}
+.bottom-table td{padding-right:24px;font-weight:600}
+.small{font-size:14px}
+.line{border-top:1px solid #000;margin:12px 0 8px}
+.footer-note{margin-top:20px;font-size:14px;line-height:1.35;font-weight:600}
+.no-break{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}
+@media print{
+ @page{size:A4 landscape;margin:0}
+ html,body{width:1123px;height:794px;margin:0!important;padding:0!important;background:#fff!important}
+ .page{width:1123px;height:794px;min-height:794px;margin:0!important;padding:34px 70px 28px 70px;overflow:hidden}
+ *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="bank-name no-break">{{BANK_NAME}}</div>
+    <div class="bank-sub no-break">Your bank. Your partner.</div>
+  </div>
+
+  <table class="form-table" aria-label="Union Bank customer details">
+    <tr>
+      <td class="label-cell">Branch</td>
+      <td class="value-cell"><span class="value no-break">{{BRANCH_NAME}}</span></td>
+    </tr>
+    <tr>
+      <td class="label-cell">Branch Address</td>
+      <td class="value-cell"><span class="value">{{BRANCH_ADDRESS}}</span></td>
+    </tr>
+    <tr>
+      <td class="label-cell">Branch Phone</td>
+      <td class="value-cell"><span class="value no-break">{{BRANCH_PHONE}}</span></td>
+    </tr>
+    <tr>
+      <td class="label-cell">Account No.</td>
+      <td class="value-cell"><span class="value no-break">{{ACCOUNT_NO}}</span></td>
+    </tr>
+  </table>
+
+  <div class="line"></div>
+
+  <table class="name-table">
+    <tr>
+      <td class="name-label">नाम i)</td>
+      <td class="name-value">{{NAME}}</td>
+    </tr>
+    <tr>
+      <td class="name-label">नाम ii)</td>
+      <td class="name-value"></td>
+    </tr>
+    <tr>
+      <td class="name-label">नाम iii)</td>
+      <td class="name-value"></td>
+    </tr>
+  </table>
+
+  <table class="form-table">
+    <tr>
+      <td class="label-cell">Occupation</td>
+      <td class="value-cell"><span class="value">{{OCCUPATION}}</span></td>
+    </tr>
+    <tr>
+      <td class="label-cell">Account Open Date</td>
+      <td class="value-cell"><span class="value no-break">{{ACCOUNT_OPEN_DATE}}</span></td>
+    </tr>
+  </table>
+
+  <table class="address-table">
+    <tr>
+      <td class="address-label">Address</td>
+      <td class="address-value">{{ADDRESS}}</td>
+    </tr>
+  </table>
+
+  <table class="form-table">
+    <tr>
+      <td class="label-cell">Nomination</td>
+      <td class="value-cell"><span class="value">{{NOMINATION}}</span></td>
+    </tr>
+  </table>
+
+  <table class="bottom-table">
+    <tr>
+      <td>IFSC: <span class="no-break">{{IFSC}}</span></td>
+      <td>MICR: <span class="no-break">{{MICR}}</span></td>
+    </tr>
+    <tr>
+      <td>Branch Code: <span class="no-break">{{BRANCH_CODE}}</span></td>
+      <td>Mode of Operation: <span class="no-break">{{MODE}}</span></td>
+    </tr>
+  </table>
+
+  <div class="footer-note">
+    <div>Date of Issue: <span class="no-break">{{ISSUE_DATE}}</span></div>
+    <div class="small">Please keep your passbook safe and inform the bank immediately in case of any discrepancy.</div>
+  </div>
+</div>
+</body>
+</html>
