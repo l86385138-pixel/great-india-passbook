@@ -3341,12 +3341,24 @@ async function saveCustomer(printAfter){
 
             if(saved){
 
-                renderPrint(saved);
+                let format = null;
+                if(saved.formatId){
+                    format = formatsCache.find(x => x.id === saved.formatId) || null;
+                    if(!format){
+                        try{
+                            const snap = await getDoc(doc(db,"passbookFormats",saved.formatId));
+                            if(snap.exists()) format = {id:snap.id,...snap.data()};
+                        }catch(e){ console.error(e); }
+                    }
+                }
+                if(!format) format = currentFormat || null;
 
-                setTimeout(
-                    () => window.print(),
-                    300
-                );
+                if(format?.templateHtml){
+                    renderCustomFormat(saved, format);
+                }else{
+                    renderPrint(saved);
+                    setTimeout(() => window.print(), 300);
+                }
             }
 
         }else{
@@ -3393,21 +3405,33 @@ function getAdminSelectedBranch(){
    PRINT CUSTOMER
    ========================================================= */
 
-function printSavedCustomer(id){
+async function printSavedCustomer(id){
 
-    const customer =
-        customersCache.find(
-            x => x.id === id
-        );
-
+    const customer = customersCache.find(x => x.id === id);
     if(!customer) return;
 
-    renderPrint(customer);
+    // Records keep the formatId used when the customer was saved. Always use
+    // that exact format so changing the retailer assignment later cannot print
+    // an unrelated bank format.
+    let format = null;
+    if(customer.formatId){
+        format = formatsCache.find(x => x.id === customer.formatId) || null;
+        if(!format){
+            try{
+                const snap = await getDoc(doc(db,"passbookFormats",customer.formatId));
+                if(snap.exists()) format = {id:snap.id,...snap.data()};
+            }catch(e){ console.error(e); }
+        }
+    }
+    if(!format) format = currentFormat || null;
 
-    setTimeout(
-        () => window.print(),
-        300
-    );
+    if(format?.templateHtml){
+        renderCustomFormat(customer, format);
+        return;
+    }
+
+    renderPrint(customer);
+    setTimeout(() => window.print(), 300);
 }
 
 
@@ -3449,9 +3473,8 @@ function buildTemplateData(customer){
 }
 
 function renderCustomFormat(customer, format){
-    if(!format?.templateHtml) return false;
+    if(!format || !format.templateHtml) return false;
 
-    const esc = v => escapeHTML(String(v ?? ""));
     const values = {
         BANK_NAME: customer.bankName || "",
         BRANCH_NAME: customer.branchName || "",
@@ -3476,103 +3499,148 @@ function renderCustomFormat(customer, format){
         ISSUE_DATE: formatPrintDate(customer.issueDate)
     };
 
-    // Replace placeholders in the COMPLETE uploaded document.
-    let source = String(format.templateHtml || "");
+    // Keep the complete uploaded HTML. Do not extract body.innerHTML because
+    // that removes the bank's <head>/<style> and can make fixed-position forms blank.
+    let source = sanitizeTemplateHTML(format.templateHtml);
+    const esc = v => escapeHTML(String(v ?? ""));
     Object.entries(values).forEach(([k,v])=>{
         const re = new RegExp("\\{\\{\\s*"+k+"\\s*\\}\\}","g");
         source = source.replace(re, esc(v));
     });
 
+    // Remove the template's own interactive print controls before loading it.
     const parser = new DOMParser();
     const doc = parser.parseFromString(source, "text/html");
-    const body = doc.body;
-    if(!body) return false;
+    if(!doc.body) return false;
+    doc.querySelectorAll("script,button,.print-btn,[type=button],[type=submit]").forEach(el=>el.remove());
 
-    // Collect the bank's original CSS before moving the document into our app.
-    const originalStyles = Array.from(doc.querySelectorAll("head style, body style"))
-        .map(x => x.textContent || "")
-        .filter(Boolean);
+    const isUnion = /union\\s*bank/i.test(String(format.bankName || "")) ||
+                    /union\\s*bank/i.test(doc.documentElement.textContent || "");
 
-    const inputs = Array.from(body.querySelectorAll("input"));
-    const textareas = Array.from(body.querySelectorAll("textarea"));
-    const selects = Array.from(body.querySelectorAll("select"));
+    // A bank format is printed in an isolated iframe. This is important because
+    // the main portal has @media print rules that otherwise hide the uploaded form.
+    let frame = document.getElementById("formatPrintFrame");
+    if(frame) frame.remove();
+    frame = document.createElement("iframe");
+    frame.id = "formatPrintFrame";
+    frame.setAttribute("aria-hidden","true");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;z-index:-1;";
+    document.body.appendChild(frame);
 
-    const isUnion = /union\s*bank/i.test(format.bankName || "") || /union\s*bank/i.test(body.textContent || "");
-
-    if(isUnion){
-        // Supplied Union Bank form has 7 text inputs before the opening-date input:
-        // branch, address, phone, account, name-1, name-2, name-3, occupation,
-        // opening date, nomination-yes, nomination-no.
-        const vals=[
-            values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
-            values.ACCOUNT_NO, values.NAME, "", "", values.OCCUPATION,
-            values.ACCOUNT_OPEN_DATE
-        ];
-        inputs.forEach((el,i)=>{
-            if(i < vals.length) el.value = vals[i];
-        });
-        if(inputs[9]) inputs[9].value = /yes|हाँ|ha/i.test(values.NOMINATION) ? "✓" : "";
-        if(inputs[10]) inputs[10].value = /no|नहीं|nahi/i.test(values.NOMINATION) ? "✓" : "";
-        if(textareas[0]) textareas[0].value = values.ADDRESS;
-    } else {
-        // Generic bank template: fill common controls in document order.
-        const vals=[values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
-            values.ACCOUNT_NO, values.NAME, values.OCCUPATION, values.ACCOUNT_OPEN_DATE];
-        inputs.forEach((el,i)=>{ if(i<vals.length) el.value=vals[i]; });
-        if(textareas[0]) textareas[0].value=values.ADDRESS;
-    }
-
-    // Also replace common visible placeholder labels if they were plain text.
-    body.innerHTML = body.innerHTML
-        .replace(/\{\{\s*BANK_NAME\s*\}\}/gi, esc(values.BANK_NAME))
-        .replace(/\{\{\s*BRANCH_NAME\s*\}\}/gi, esc(values.BRANCH_NAME));
-
-    // Remove any print buttons from the uploaded template.
-    body.querySelectorAll("button,.print-btn,[type=button],[type=submit]").forEach(el=>el.remove());
-
-    // Build a self-contained print document. This fixes formats that were saved
-    // with head CSS and prevents the app's global print CSS from blanking them.
-    const wrapper = document.createElement("div");
-    wrapper.className = "custom-passbook-format";
-    wrapper.innerHTML = body.innerHTML;
-
-    const bankStyle = document.createElement("style");
-    bankStyle.id = "__uploaded_bank_format_css";
-    bankStyle.textContent = originalStyles.join("\n");
-    wrapper.insertBefore(bankStyle, wrapper.firstChild);
-
-    const side = format.side || "left";
-    const left = side === "right" ? "48%" : side === "center" ? "24%" : `${Number(format.leftPct ?? 0)}%`;
-    const top = Number(format.topMm ?? 0);
-    const width = Number(format.widthPct ?? 100);
     const pageSize = String(format.pageSize || (isUnion ? "A4" : "A4")).toUpperCase();
     const orientation = String(format.orientation || (isUnion ? "landscape" : "portrait")).toLowerCase();
 
-    wrapper.style.cssText = `position:absolute;left:${left};top:${top}mm;width:${width}%;margin:0;padding:0;background:#fff;color:#000;box-sizing:border-box;`;
+    // Make the uploaded document print exactly as uploaded. Only page setup and
+    // safe print cleanup are added; the bank's own CSS is otherwise untouched.
+    const printStyle = doc.createElement("style");
+    printStyle.id = "__great_india_print_style";
+    printStyle.textContent = `
+        @media print {
+            @page { size: ${pageSize} ${orientation}; margin: 0 !important; }
+            html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+            .print-btn, button, [type="button"], [type="submit"] { display:none !important; }
+            input, textarea, select { color:#000 !important; -webkit-text-fill-color:#000 !important; opacity:1 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    `;
+    doc.head.appendChild(printStyle);
 
-    const area = $("printArea");
-    area.innerHTML = "";
-    area.appendChild(wrapper);
+    // IMPORTANT: set both the live value and the value attribute. When the HTML
+    // is printed through a new document, only the serialized attribute is reliable.
+    frame.onload = function(){
+        try{
+            const d = frame.contentDocument;
+            if(!d || !d.body) throw new Error("Print format document could not be loaded.");
 
-    // Strong print isolation: the uploaded bank CSS is retained, while the
-    // application UI remains hidden. Inputs print their current values.
-    document.head.querySelector("#__dynamic_custom_print_css")?.remove();
-    const printCss=document.createElement("style");
-    printCss.id="__dynamic_custom_print_css";
-    printCss.textContent=`@media print{
-        @page{size:${pageSize} ${orientation};margin:0}
-        html,body{margin:0!important;padding:0!important;background:#fff!important;color:#000!important}
-        body *{visibility:hidden!important}
-        #printArea,#printArea *{visibility:visible!important}
-        #printArea{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;margin:0!important;padding:0!important;background:#fff!important;overflow:hidden!important}
-        #printArea .custom-passbook-format{display:block!important;visibility:visible!important;color:#000!important}
-        #printArea .custom-passbook-format *{visibility:visible!important}
-        #printArea input,#printArea textarea,#printArea select{color:#000!important;-webkit-text-fill-color:#000!important;opacity:1!important}
-        #printArea input::placeholder,#printArea textarea::placeholder{color:transparent!important}
-        #printArea .print-btn,#printArea button{display:none!important}
-        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    }`;
-    document.head.appendChild(printCss);
+            const inputs = Array.from(d.querySelectorAll("input"));
+            const textareas = Array.from(d.querySelectorAll("textarea"));
+            const selects = Array.from(d.querySelectorAll("select"));
+
+            function setInput(el, value){
+                if(!el) return;
+                const v = String(value ?? "");
+                el.value = v;
+                el.setAttribute("value", v);
+                el.removeAttribute("placeholder");
+            }
+            function setTextarea(el, value){
+                if(!el) return;
+                const v = String(value ?? "");
+                el.value = v;
+                el.textContent = v;
+            }
+
+            if(isUnion){
+                // Union Bank supplied format field order:
+                // 0 Branch, 1 Branch Address, 2 Phone, 3 Account No,
+                // 4/5/6 Name i/ii/iii, 7 Occupation, 8 Opening Date,
+                // 9 Nomination Yes, 10 Nomination No.
+                setInput(inputs[0], values.BRANCH_NAME);
+                setInput(inputs[1], values.BRANCH_ADDRESS);
+                setInput(inputs[2], values.BRANCH_PHONE);
+                setInput(inputs[3], values.ACCOUNT_NO);
+                setInput(inputs[4], values.NAME);
+                setInput(inputs[5], "");
+                setInput(inputs[6], "");
+                setInput(inputs[7], values.OCCUPATION);
+                setInput(inputs[8], values.ACCOUNT_OPEN_DATE);
+
+                const nom = String(values.NOMINATION || "").toLowerCase();
+                setInput(inputs[9], /yes|registered|हाँ|ha/.test(nom) ? "✓" : "");
+                setInput(inputs[10], /no|not registered|नहीं|nahi/.test(nom) ? "✓" : "");
+                setTextarea(textareas[0], values.ADDRESS);
+            }else{
+                // Generic bank form: placeholders are preferred. If the uploaded
+                // format has ordinary form controls, fill them by common order.
+                const vals = [
+                    values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
+                    values.ACCOUNT_NO, values.NAME, values.OCCUPATION,
+                    values.ACCOUNT_OPEN_DATE, values.FATHER_NAME, values.ADDRESS,
+                    values.ISSUE_DATE
+                ];
+                inputs.forEach((el,i)=>{ if(i < vals.length) setInput(el, vals[i]); });
+                if(textareas[0]) setTextarea(textareas[0], values.ADDRESS);
+                selects.forEach(sel=>{
+                    const text = (sel.value || sel.getAttribute("value") || "").toLowerCase();
+                    if(/mode/.test(sel.id || "")){
+                        const opt = Array.from(sel.options).find(o=>String(o.value).toUpperCase()===String(values.MODE).toUpperCase());
+                        if(opt) sel.value = opt.value;
+                    }
+                });
+            }
+
+            // For templates using labels instead of placeholders, replace the
+            // remaining visible placeholder text after controls are populated.
+            d.body.innerHTML = d.body.innerHTML
+                .replace(/\\{\\{\\s*BANK_NAME\\s*\\}\\}/gi, esc(values.BANK_NAME))
+                .replace(/\\{\\{\\s*BRANCH_NAME\\s*\\}\\}/gi, esc(values.BRANCH_NAME));
+
+            // Re-apply input values after serialization above.
+            if(isUnion){
+                const ins = Array.from(d.querySelectorAll("input"));
+                const tas = Array.from(d.querySelectorAll("textarea"));
+                [values.BRANCH_NAME, values.BRANCH_ADDRESS, values.BRANCH_PHONE,
+                 values.ACCOUNT_NO, values.NAME, "", "", values.OCCUPATION,
+                 values.ACCOUNT_OPEN_DATE].forEach((v,i)=>setInput(ins[i],v));
+                setInput(ins[9], /yes|registered|हाँ|ha/.test(String(values.NOMINATION).toLowerCase()) ? "✓" : "");
+                setInput(ins[10], /no|not registered|नहीं|nahi/.test(String(values.NOMINATION).toLowerCase()) ? "✓" : "");
+                setTextarea(tas[0], values.ADDRESS);
+            }
+
+            // Give the browser a moment to apply the bank CSS and layout before print.
+            setTimeout(()=>{
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+                setTimeout(()=>frame.remove(), 1500);
+            }, 250);
+        }catch(err){
+            console.error("Custom format print error:", err);
+            frame.remove();
+            alert("Passbook format print failed:\n" + err.message);
+        }
+    };
+
+    frame.srcdoc = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
     return true;
 }
 
