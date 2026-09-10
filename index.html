@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Great India Passbook</title>
+<title>Great India Passbook - Bank / Branch / Format Management</title>
 
 <style>
 *{box-sizing:border-box}
@@ -344,6 +344,10 @@ th{
     }
 }
 
+
+.bank-format-help{font-size:13px;color:#555;line-height:1.5}
+code{background:#eef4fb;padding:2px 5px;border-radius:4px;margin:2px;display:inline-block}
+
 /* PRINT - CENTERED ON A4 BLANK PAGE */
 #printArea{display:none;}
 
@@ -383,6 +387,15 @@ th{
         overflow:hidden!important;
     }
 
+    .custom-passbook-format{
+        position:absolute!important;
+        margin:0!important;
+        padding:0!important;
+        background:#fff!important;
+        box-sizing:border-box!important;
+        color:#000!important;
+    }
+
     .source-pnb-format{
         position:absolute!important;
         left:3%!important;
@@ -397,6 +410,16 @@ th{
         color:#000!important;
         background:#fff!important;
         box-sizing:border-box!important;
+    }
+
+
+    .source-pnb-format,
+    .source-pnb-format *,
+    .source-pnb-format span,
+    .source-pnb-format div {
+        color:#000!important;
+        -webkit-print-color-adjust: exact!important;
+        print-color-adjust: exact!important;
     }
 
     .source-pnb-format .m-l{
@@ -504,8 +527,16 @@ th{
             🏠 Dashboard
         </button>
 
+        <button class="nav-btn admin-only" data-page="banks">
+            🏛️ Banks
+        </button>
+
         <button class="nav-btn admin-only" data-page="branches">
             🏦 Branches
+        </button>
+
+        <button class="nav-btn admin-only" data-page="formats">
+            📄 Passbook Formats
         </button>
 
         <button class="nav-btn admin-only" data-page="retailers">
@@ -580,11 +611,74 @@ th{
                     <div class="quick-actions">
                         <button class="primary" data-page-action="passbook">🖨️ Print Passbook</button>
                         <button class="success admin-only" data-page-action="retailers">👤 Add Retailer</button>
+                        <button class="primary admin-only" data-page-action="banks">🏛️ Manage Banks</button>
                         <button class="primary admin-only" data-page-action="branches">🏦 Manage Branches</button>
+                        <button class="primary admin-only" data-page-action="formats">📄 Passbook Formats</button>
                         <button class="secondary" data-page-action="customers">📋 View Records</button>
                     </div>
                 </div>
 
+            </section>
+
+            <!-- BANKS -->
+            <section class="page" id="page-banks">
+
+                <div class="card">
+                    <h3>Add / Edit Bank</h3>
+                    <form id="bankForm">
+                        <input type="hidden" id="bankId">
+                        <div class="grid">
+                            <div class="form-group">
+                                <label>Bank Name</label>
+                                <input id="bankName" required placeholder="Union Bank of India">
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Code</label>
+                                <input id="bankCode" placeholder="UBIN">
+                            </div>
+                            <div class="form-group">
+                                <label>IFSC Prefix</label>
+                                <input id="bankIfscPrefix" placeholder="UBIN0">
+                            </div>
+                            <div class="form-group">
+                                <label>Helpline / Phone</label>
+                                <input id="bankPhone">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Bank Address</label>
+                                <textarea id="bankAddress" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Toll Free</label>
+                                <input id="bankTollFree">
+                            </div>
+                            <div class="form-group">
+                                <label>Nodal Officer</label>
+                                <input id="bankNodalOfficer">
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="bankStatus">
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="primary" type="submit">Save Bank</button>
+                        <button class="secondary" type="button" id="clearBank">Clear</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Bank List</h3>
+                    <div class="search-box"><input id="bankSearch" placeholder="Search bank..."></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Bank</th><th>Code</th><th>IFSC Prefix</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="bankTable"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- BRANCHES -->
@@ -600,8 +694,21 @@ th{
                         <div class="grid">
 
                             <div class="form-group">
-                                <label>Bank Name</label>
-                                <input id="branchBankName" value="Punjab National Bank" required>
+                                <label>Bank</label>
+                                <select id="branchBankId" required>
+                                    <option value="">Select Bank</option>
+                                </select>
+                                <input type="hidden" id="branchBankName" value="">
+                            </div>
+
+                            <div class="form-group">
+                                <label>State</label>
+                                <input id="branchState" placeholder="Bihar">
+                            </div>
+
+                            <div class="form-group">
+                                <label>District / City</label>
+                                <input id="branchDistrict" placeholder="Aurangabad">
                             </div>
 
                             <div class="form-group">
@@ -676,7 +783,9 @@ th{
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Bank</th>
                                     <th>Branch</th>
+                                    <th>State</th>
                                     <th>Code</th>
                                     <th>IFSC</th>
                                     <th>MICR</th>
@@ -689,6 +798,84 @@ th{
                     </div>
                 </div>
 
+            </section>
+
+            <!-- PASSBOOK FORMATS -->
+            <section class="page" id="page-formats">
+                <div class="card">
+                    <h3>Add / Edit Passbook Format</h3>
+                    <div class="notice">
+                        Admin पहले bank बनाये, फिर branch बनाये, फिर उस bank का passbook format upload करें। Format file <strong>HTML / HTM / TXT</strong> हो सकती है। Template में नीचे दिये placeholders लगाने पर customer data अपने आप भर जाएगा।
+                    </div>
+                    <form id="formatForm" style="margin-top:15px">
+                        <input type="hidden" id="formatId">
+                        <div class="grid">
+                            <div class="form-group">
+                                <label>Bank</label>
+                                <select id="formatBankId" required><option value="">Select Bank</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Format Name</label>
+                                <input id="formatName" required placeholder="PNB First Page / Union Bank First Page">
+                            </div>
+                            <div class="form-group">
+                                <label>Page Size</label>
+                                <select id="formatPageSize"><option value="A4">A4</option><option value="A5">A5</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Orientation</label>
+                                <select id="formatOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Data Start Left (%)</label>
+                                <input type="number" step="0.1" id="formatLeft" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Start Top (mm)</label>
+                                <input type="number" step="0.1" id="formatTop" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Width (%)</label>
+                                <input type="number" step="0.1" id="formatWidth" value="52">
+                            </div>
+                            <div class="form-group">
+                                <label>Font Size (px)</label>
+                                <input type="number" step="0.1" id="formatFontSize" value="11">
+                            </div>
+                            <div class="form-group">
+                                <label>Line Height</label>
+                                <input type="number" step="0.05" id="formatLineHeight" value="1.3">
+                            </div>
+                            <div class="form-group">
+                                <label>Print Start Side</label>
+                                <select id="formatSide"><option value="left">Left</option><option value="right">Right</option><option value="center">Center</option></select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Passbook Format File</label>
+                                <input type="file" id="formatFile" accept=".html,.htm,.txt,text/html,text/plain">
+                                <div id="formatFileStatus" style="font-size:12px;color:#666;margin-top:6px">Existing saved template edit करते समय file दोबारा चुनना जरूरी नहीं है।</div>
+                            </div>
+                        </div>
+                        <div class="card" style="background:#f8fbff;border:1px solid #d7e3f3;margin:10px 0">
+                            <strong>Template placeholders:</strong><br>
+                            <code>{{BANK_NAME}}</code> <code>{{BRANCH_NAME}}</code> <code>{{BRANCH_CODE}}</code> <code>{{IFSC}}</code> <code>{{MICR}}</code> <code>{{BRANCH_ADDRESS}}</code> <code>{{BRANCH_PHONE}}</code><br>
+                            <code>{{MODE}}</code> <code>{{CUSTOMER_ID}}</code> <code>{{AADHAAR}}</code> <code>{{ACCOUNT_NO}}</code> <code>{{NAME}}</code> <code>{{ACCOUNT_OPEN_DATE}}</code><br>
+                            <code>{{FATHER_RELATION}}</code> <code>{{FATHER_NAME}}</code> <code>{{ADDRESS}}</code> <code>{{NOMINATION}}</code> <code>{{ISSUE_DATE}}</code> <code>{{TOLL_FREE}}</code> <code>{{NODAL_OFFICER}}</code>
+                        </div>
+                        <button class="primary" type="submit">Save Format</button>
+                        <button class="secondary" type="button" id="clearFormat">Clear</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Saved Passbook Formats</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Bank</th><th>Format</th><th>Page</th><th>Position</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody id="formatTable"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- RETAILERS -->
@@ -724,9 +911,23 @@ th{
                             </div>
 
                             <div class="form-group">
+                                <label>Assign Bank</label>
+                                <select id="retailerBank" required>
+                                    <option value="">Select Bank</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
                                 <label>Assign Branch</label>
                                 <select id="retailerBranch" required>
                                     <option value="">Select Branch</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Assign Passbook Format</label>
+                                <select id="retailerFormat" required>
+                                    <option value="">Select Format</option>
                                 </select>
                             </div>
 
@@ -765,7 +966,9 @@ th{
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Phone</th>
+                                    <th>Bank</th>
                                     <th>Branch</th>
+                                    <th>Format</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -1039,8 +1242,12 @@ let currentUser = null;
 let currentRole = null;
 let currentProfile = null;
 let currentBranch = null;
+let currentBank = null;
+let currentFormat = null;
 
+let banksCache = [];
 let branchesCache = [];
+let formatsCache = [];
 let retailersCache = [];
 let customersCache = [];
 
@@ -1289,12 +1496,14 @@ async function initializePortal(){
 
     if(currentRole === "admin"){
 
+        await loadBanks();
         await loadBranches();
+        await loadFormats();
         await loadRetailers();
         await loadCustomers();
 
         $("dashboardMessage").textContent =
-            "Admin Panel — Branch और Retailer management.";
+            "Admin Panel — Banks, Branches, Passbook Formats और Retailer assignment management.";
 
     }else{
 
@@ -1343,7 +1552,9 @@ document.querySelectorAll(".nav-btn")
 
         const titles = {
             dashboard:"Dashboard",
+            banks:"Banks",
             branches:"Branches",
+            formats:"Passbook Formats",
             retailers:"Retailers",
             passbook:"Passbook Print",
             customers:"Customer Records"
@@ -1354,11 +1565,24 @@ document.querySelectorAll(".nav-btn")
 
         $("sidebar").classList.remove("open");
 
+        if(page === "banks"){
+            await loadBanks();
+        }
+
         if(page === "branches"){
+            await loadBanks();
             await loadBranches();
         }
 
+        if(page === "formats"){
+            await loadBanks();
+            await loadFormats();
+        }
+
         if(page === "retailers"){
+            await loadBanks();
+            await loadBranches();
+            await loadFormats();
             await loadRetailers();
         }
 
@@ -1402,6 +1626,97 @@ $("logoutBtn").addEventListener("click",async function(){
 
 
 /* =========================================================
+   BANKS
+   ========================================================= */
+
+async function loadBanks(){
+    if(currentRole !== "admin") return;
+    try{
+        const snapshot = await getDocs(collection(db,"banks"));
+        banksCache = [];
+        snapshot.forEach(snap => banksCache.push({id:snap.id,...snap.data()}));
+        banksCache.sort((a,b)=>String(a.bankName||"").localeCompare(String(b.bankName||"")));
+        renderBanks();
+        populateBankSelects();
+    }catch(error){
+        console.error(error);
+        alert("Banks load failed:\n" + error.message);
+    }
+}
+
+function populateBankSelects(){
+    ["branchBankId","formatBankId","retailerBank"].forEach(id=>{
+        const select=$(id);
+        if(!select) return;
+        const old=select.value;
+        select.innerHTML='<option value="">Select Bank</option>';
+        banksCache.filter(x=>x.status!=="inactive").forEach(bank=>{
+            const opt=document.createElement("option");
+            opt.value=bank.id;
+            opt.textContent=bank.bankName;
+            select.appendChild(opt);
+        });
+        if([...select.options].some(o=>o.value===old)) select.value=old;
+    });
+}
+
+function renderBanks(){
+    const tbody=$( "bankTable" );
+    if(!tbody) return;
+    tbody.innerHTML="";
+    const search=$( "bankSearch" )?.value.trim().toLowerCase() || "";
+    banksCache.filter(b=>`${b.bankName||""} ${b.bankCode||""} ${b.bankIfscPrefix||""}`.toLowerCase().includes(search)).forEach(bank=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${escapeHTML(bank.bankName||"")}</td><td>${escapeHTML(bank.bankCode||"")}</td><td>${escapeHTML(bank.bankIfscPrefix||"")}</td><td><span class="badge">${escapeHTML(bank.status||"active")}</span></td><td><div class="actions"><button class="primary" data-edit-bank="${escapeHTML(bank.id)}">Edit</button><button class="danger" data-delete-bank="${escapeHTML(bank.id)}">Delete</button></div></td>`;
+        tbody.appendChild(tr);
+    });
+    document.querySelectorAll("[data-edit-bank]").forEach(b=>b.addEventListener("click",()=>editBank(b.dataset.editBank)));
+    document.querySelectorAll("[data-delete-bank]").forEach(b=>b.addEventListener("click",()=>deleteBank(b.dataset.deleteBank)));
+}
+
+$("bankForm")?.addEventListener("submit",async e=>{
+    e.preventDefault();
+    if(currentRole!=="admin") return;
+    const id=$("bankId").value.trim();
+    const data={
+        bankName:$("bankName").value.trim(),
+        bankCode:$("bankCode").value.trim(),
+        bankIfscPrefix:$("bankIfscPrefix").value.trim(),
+        bankPhone:$("bankPhone").value.trim(),
+        bankAddress:$("bankAddress").value.trim(),
+        tollFree:$("bankTollFree").value.trim(),
+        nodalOfficer:$("bankNodalOfficer").value.trim(),
+        status:$("bankStatus").value,
+        updatedAt:serverTimestamp()
+    };
+    if(!data.bankName){alert("Bank Name required है.");return;}
+    try{
+        if(id) await setDoc(doc(db,"banks",id),data,{merge:true});
+        else {data.createdAt=serverTimestamp(); await setDoc(doc(collection(db,"banks")),data);}
+        clearBankForm(); await loadBanks(); await loadBranches(); await loadFormats();
+        alert(id?"Bank updated successfully.":"Bank added successfully.");
+    }catch(error){alert("Bank save failed:\n"+error.message);}
+});
+
+function editBank(id){
+    const b=banksCache.find(x=>x.id===id); if(!b) return;
+    $("bankId").value=id; $("bankName").value=b.bankName||""; $("bankCode").value=b.bankCode||"";
+    $("bankIfscPrefix").value=b.bankIfscPrefix||""; $("bankPhone").value=b.bankPhone||""; $("bankAddress").value=b.bankAddress||"";
+    $("bankTollFree").value=b.tollFree||""; $("bankNodalOfficer").value=b.nodalOfficer||""; $("bankStatus").value=b.status||"active";
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+async function deleteBank(id){
+    if(!confirm("इस bank को delete करना है? Existing branches/formats में इसका data रह सकता है।")) return;
+    try{await deleteDoc(doc(db,"banks",id)); await loadBanks(); alert("Bank deleted.");}
+    catch(error){alert("Bank delete failed:\n"+error.message);}
+}
+function clearBankForm(){
+    $("bankForm")?.reset(); $("bankId").value=""; $("bankStatus").value="active";
+}
+$("clearBank")?.addEventListener("click",clearBankForm);
+$("bankSearch")?.addEventListener("input",renderBanks);
+
+/* =========================================================
    BRANCHES
    ========================================================= */
 
@@ -1417,16 +1732,18 @@ async function loadBranches(){
         branchesCache = [];
 
         snapshot.forEach(snap => {
-
+            const data = snap.data();
+            const bank = banksCache.find(b=>b.id===data.bankId);
             branchesCache.push({
                 id:snap.id,
-                ...snap.data()
+                ...data,
+                bankName:data.bankName || bank?.bankName || "Punjab National Bank"
             });
-
         });
 
         renderBranches();
         populateBranchSelect();
+        populateRetailerBranchSelect();
 
     }catch(error){
 
@@ -1467,10 +1784,13 @@ function renderBranches(){
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
+            <td>${escapeHTML(branch.bankName || "")}</td>
+
             <td>
-                <strong>${escapeHTML(branch.branchName)}</strong><br>
-                <small>${escapeHTML(branch.bankName)}</small>
+                <strong>${escapeHTML(branch.branchName)}</strong>
             </td>
+
+            <td>${escapeHTML(branch.branchState || "")}</td>
 
             <td>${escapeHTML(branch.branchCode)}</td>
 
@@ -1545,9 +1865,17 @@ $("branchForm").addEventListener("submit",async function(e){
 
     const id = $("branchId").value.trim();
 
+    const bankId=$("branchBankId").value;
+    const bank=banksCache.find(x=>x.id===bankId);
+    if(!bank){ alert("पहले Bank select करें."); return; }
+
     const data = {
 
-        bankName:$("branchBankName").value.trim(),
+        bankId:bank.id,
+        bankName:bank.bankName || "",
+        bankCode:bank.bankCode || "",
+        branchState:$("branchState").value.trim(),
+        branchDistrict:$("branchDistrict").value.trim(),
 
         branchName:$("branchName").value.trim(),
 
@@ -1628,8 +1956,10 @@ function editBranch(id){
 
     $("branchId").value = id;
 
-    $("branchBankName").value =
-        branch.bankName || "";
+    $("branchBankId").value = branch.bankId || "";
+    $("branchBankName").value = branch.bankName || "";
+    $("branchState").value = branch.branchState || "";
+    $("branchDistrict").value = branch.branchDistrict || "";
 
     $("branchName").value =
         branch.branchName || "";
@@ -1699,8 +2029,12 @@ function clearBranchForm(){
 
     $("branchId").value = "";
 
+    $("branchBankId").value =
+        banksCache.find(x=>/punjab national bank/i.test(x.bankName||""))?.id || "";
     $("branchBankName").value =
-        "Punjab National Bank";
+        "";
+    $("branchState").value = "";
+    $("branchDistrict").value = "";
 
     $("branchStatus").value = "active";
 }
@@ -1716,31 +2050,138 @@ $("clearBranch").addEventListener(
    ========================================================= */
 
 function populateBranchSelect(){
-
-    const select = $("retailerBranch");
-
+    const select=$( "retailerBranch" );
     if(!select) return;
+    const bankId=$( "retailerBank" )?.value || "";
+    const old=select.value;
+    select.innerHTML='<option value="">Select Branch</option>';
+    branchesCache.filter(x=>x.status!=="inactive" && (!bankId || x.bankId===bankId)).forEach(branch=>{
+        const option=document.createElement("option");
+        option.value=branch.id;
+        option.textContent=`${branch.branchName} (${branch.branchCode||branch.ifscCode||""})`;
+        select.appendChild(option);
+    });
+    if([...select.options].some(o=>o.value===old)) select.value=old;
+}
+function populateRetailerBranchSelect(){ populateBranchSelect(); }
 
-    select.innerHTML =
-        `<option value="">Select Branch</option>`;
-
-    branchesCache
-        .filter(x => x.status !== "inactive")
-        .forEach(branch => {
-
-            const option =
-                document.createElement("option");
-
-            option.value = branch.id;
-
-            option.textContent =
-                `${branch.branchName} (${branch.ifscCode || ""})`;
-
-            select.appendChild(option);
-
-        });
+function populateFormatSelect(){
+    const select=$( "retailerFormat" ); if(!select) return;
+    const bankId=$( "retailerBank" )?.value || "";
+    const old=select.value;
+    select.innerHTML='<option value="">Select Format</option>';
+    formatsCache.filter(x=>x.status!=="inactive" && (!bankId || x.bankId===bankId)).forEach(f=>{
+        const option=document.createElement("option"); option.value=f.id; option.textContent=f.formatName; select.appendChild(option);
+    });
+    if([...select.options].some(o=>o.value===old)) select.value=old;
 }
 
+$("retailerBank")?.addEventListener("change",()=>{ populateBranchSelect(); populateFormatSelect(); });
+$("retailerBranch")?.addEventListener("change",()=>{
+    const b=branchesCache.find(x=>x.id===$("retailerBranch").value);
+    if(b && $("retailerBank").value!==b.bankId){ $("retailerBank").value=b.bankId||""; populateBranchSelect(); populateFormatSelect(); $("retailerBranch").value=b.id; }
+});
+
+
+
+/* =========================================================
+   PASSBOOK FORMATS
+   ========================================================= */
+
+function sanitizeTemplateHTML(html){
+    const parser=new DOMParser();
+    const parsed=parser.parseFromString(String(html||""),"text/html");
+    parsed.querySelectorAll("script,iframe,object,embed,form,base,meta[http-equiv],link[rel=import]").forEach(x=>x.remove());
+    parsed.querySelectorAll("*").forEach(el=>{
+        [...el.attributes].forEach(attr=>{
+            const n=attr.name.toLowerCase();
+            const v=String(attr.value||"").trim().toLowerCase();
+            if(n.startsWith("on") || n==="srcdoc" || (n==="href" && v.startsWith("javascript:")) || (n==="src" && v.startsWith("javascript:"))) el.removeAttribute(attr.name);
+        });
+    });
+    return parsed.body ? parsed.body.innerHTML : String(html||"");
+}
+
+async function loadFormats(){
+    if(currentRole !== "admin") return;
+    try{
+        const snapshot=await getDocs(collection(db,"passbookFormats"));
+        formatsCache=[];
+        snapshot.forEach(snap=>formatsCache.push({id:snap.id,...snap.data()}));
+        renderFormats();
+        populateFormatSelect();
+    }catch(error){console.error(error);alert("Passbook formats load failed:\n"+error.message);}
+}
+
+function renderFormats(){
+    const tbody=$( "formatTable" ); if(!tbody) return; tbody.innerHTML="";
+    formatsCache.forEach(f=>{
+        const bank=banksCache.find(b=>b.id===f.bankId);
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${escapeHTML(f.bankName||bank?.bankName||"")}</td><td>${escapeHTML(f.formatName||"")}</td><td>${escapeHTML((f.pageSize||"A4")+" "+(f.orientation||"portrait"))}</td><td>L ${escapeHTML(f.leftPct??3)}% / T ${escapeHTML(f.topMm??0)}mm / W ${escapeHTML(f.widthPct??52)}%</td><td><span class="badge">${escapeHTML(f.status||"active")}</span></td><td><div class="actions"><button class="primary" data-edit-format="${escapeHTML(f.id)}">Edit</button><button class="danger" data-delete-format="${escapeHTML(f.id)}">Delete</button></div></td>`;
+        tbody.appendChild(tr);
+    });
+    document.querySelectorAll("[data-edit-format]").forEach(b=>b.addEventListener("click",()=>editFormat(b.dataset.editFormat)));
+    document.querySelectorAll("[data-delete-format]").forEach(b=>b.addEventListener("click",()=>deleteFormat(b.dataset.deleteFormat)));
+}
+
+$("formatFile")?.addEventListener("change",()=>{
+    const file=$("formatFile").files?.[0];
+    if(file) $("formatFileStatus").textContent=`Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
+});
+
+$("formatForm")?.addEventListener("submit",async e=>{
+    e.preventDefault();
+    if(currentRole!=="admin") return;
+    const id=$("formatId").value.trim();
+    const bankId=$("formatBankId").value;
+    const bank=banksCache.find(x=>x.id===bankId);
+    if(!bank){alert("Bank select करें.");return;}
+    let templateHtml=null;
+    const file=$("formatFile").files?.[0];
+    if(file){
+        if(file.size>900000){alert("Format file 900 KB से छोटी रखें ताकि Firestore में सुरक्षित रहे.");return;}
+        const name=file.name.toLowerCase();
+        if(!/\.(html?|txt)$/.test(name)){alert("केवल HTML, HTM या TXT format file upload करें.");return;}
+        templateHtml=sanitizeTemplateHTML(await file.text());
+    }
+    const data={
+        bankId:bank.id, bankName:bank.bankName||"", formatName:$("formatName").value.trim(),
+        pageSize:$("formatPageSize").value||"A4", orientation:$("formatOrientation").value||"portrait",
+        leftPct:Number($("formatLeft").value)||0, topMm:Number($("formatTop").value)||0,
+        widthPct:Number($("formatWidth").value)||52, fontSize:Number($("formatFontSize").value)||11,
+        lineHeight:Number($("formatLineHeight").value)||1.3, side:$("formatSide").value||"left",
+        status:"active", updatedAt:serverTimestamp()
+    };
+    if(!data.formatName){alert("Format Name required है.");return;}
+    if(templateHtml!==null) data.templateHtml=templateHtml;
+    try{
+        if(id) await setDoc(doc(db,"passbookFormats",id),data,{merge:true});
+        else {data.createdAt=serverTimestamp(); await setDoc(doc(collection(db,"passbookFormats")),data);}
+        clearFormatForm(); await loadFormats(); alert(id?"Passbook format updated successfully.":"Passbook format added successfully.");
+    }catch(error){console.error(error);alert("Format save failed:\n"+error.message);}
+});
+
+function editFormat(id){
+    const f=formatsCache.find(x=>x.id===id); if(!f) return;
+    $("formatId").value=id; $("formatBankId").value=f.bankId||""; $("formatName").value=f.formatName||"";
+    $("formatPageSize").value=f.pageSize||"A4"; $("formatOrientation").value=f.orientation||"portrait";
+    $("formatLeft").value=f.leftPct??3; $("formatTop").value=f.topMm??0; $("formatWidth").value=f.widthPct??52;
+    $("formatFontSize").value=f.fontSize??11; $("formatLineHeight").value=f.lineHeight??1.3; $("formatSide").value=f.side||"left";
+    $("formatFile").value=""; $("formatFileStatus").textContent=f.templateHtml?"Saved template मौजूद है. Replace करने के लिए नई file चुनें.":"No template file saved.";
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+async function deleteFormat(id){
+    if(!confirm("इस passbook format को delete करना है? Assigned retailer का format तभी बदलेगा जब आप नया format assign करेंगे.")) return;
+    try{await deleteDoc(doc(db,"passbookFormats",id)); await loadFormats(); alert("Format deleted.");}
+    catch(error){alert("Format delete failed:\n"+error.message);}
+}
+function clearFormatForm(){
+    $("formatForm")?.reset(); $("formatId").value=""; $("formatPageSize").value="A4"; $("formatOrientation").value="portrait";
+    $("formatLeft").value=3; $("formatTop").value=0; $("formatWidth").value=52; $("formatFontSize").value=11; $("formatLineHeight").value=1.3; $("formatSide").value="left";
+    $("formatFile").value=""; $("formatFileStatus").textContent="Existing saved template edit करते समय file दोबारा चुनना जरूरी नहीं है.";
+}
+$("clearFormat")?.addEventListener("click",clearFormatForm);
 
 /* =========================================================
    RETAILERS
@@ -1798,13 +2239,11 @@ function renderRetailers(){
 
             <td>${escapeHTML(retailer.phone)}</td>
 
-            <td>
-                ${escapeHTML(
-                    retailer.branchName ||
-                    retailer.branchId ||
-                    ""
-                )}
-            </td>
+            <td>${escapeHTML(retailer.bankName || retailer.bankId || "")}</td>
+
+            <td>${escapeHTML(retailer.branchName || retailer.branchId || "")}</td>
+
+            <td>${escapeHTML(retailer.formatName || retailer.formatId || "")}</td>
 
             <td>
                 <span class="badge">
@@ -1877,13 +2316,21 @@ $("retailerForm").addEventListener("submit",async function(e){
     const id = $("retailerId").value.trim();
     const email = $("retailerEmail").value.trim();
     const password = $("retailerPassword").value;
+    const bankId = $("retailerBank").value;
     const branchId = $("retailerBranch").value;
+    const formatId = $("retailerFormat").value;
 
     if(!email){ alert("Retailer email required है."); return; }
+    if(!bankId){ alert("Bank select करें."); return; }
     if(!branchId){ alert("Branch select करें."); return; }
+    if(!formatId){ alert("Passbook Format select करें."); return; }
 
     const branch = branchesCache.find(x => x.id === branchId);
+    const bank = banksCache.find(x => x.id === bankId);
+    const format = formatsCache.find(x => x.id === formatId);
     if(!branch){ alert("Selected branch नहीं मिली."); return; }
+    if(!bank){ alert("Selected bank नहीं मिला."); return; }
+    if(!format){ alert("Selected passbook format नहीं मिला."); return; }
 
     if(!id && password.length < 6){
         alert("नए retailer के लिए password कम से कम 6 characters का रखें.");
@@ -1896,9 +2343,13 @@ $("retailerForm").addEventListener("submit",async function(e){
         phone:$("retailerPhone").value.trim(),
         role:"retailer",
         status:$("retailerStatus").value,
+        bankId:bank.id,
+        bankName:bank.bankName || "",
         branchId:branch.id,
         branchName:branch.branchName,
-        bankId:"PNB",
+        branchCode:branch.branchCode || "",
+        formatId:format.id,
+        formatName:format.formatName || "",
         updatedAt:serverTimestamp()
     };
 
@@ -1951,8 +2402,11 @@ function editRetailer(id){
     $("retailerPhone").value =
         retailer.phone || "";
 
-    $("retailerBranch").value =
-        retailer.branchId || "";
+    $("retailerBank").value = retailer.bankId || "";
+    populateBranchSelect();
+    populateFormatSelect();
+    $("retailerBranch").value = retailer.branchId || "";
+    $("retailerFormat").value = retailer.formatId || "";
 
     $("retailerStatus").value =
         retailer.status || "active";
@@ -1996,6 +2450,9 @@ function clearRetailerForm(){
     $("retailerForm").reset();
     $("retailerId").value = "";
     $("retailerPassword").value = "";
+    $("retailerBank").value = "";
+    populateBranchSelect();
+    populateFormatSelect();
     $("retailerStatus").value = "active";
 }
 
@@ -2048,6 +2505,14 @@ async function loadAssignedBranch(){
             ...snap.data()
         };
 
+        currentBank = banksCache.find(b=>b.id===currentBranch.bankId) || {id:currentBranch.bankId||"",bankName:currentBranch.bankName||""};
+        currentFormat = null;
+        if(currentProfile.formatId){
+            try{
+                const fs=await getDoc(doc(db,"passbookFormats",currentProfile.formatId));
+                if(fs.exists()) currentFormat={id:fs.id,...fs.data()};
+            }catch(e){console.warn("Assigned format load failed",e);}
+        }
         renderAssignedBranch();
 
     }catch(error){
@@ -2072,7 +2537,7 @@ function renderAssignedBranch(){
     $("assignedBranchBox").innerHTML = `
 
         <strong>
-            ${escapeHTML(currentBranch.bankName)}
+            ${escapeHTML(currentBank?.bankName || currentBranch.bankName || "")}
         </strong>
 
         <br>
@@ -2099,6 +2564,9 @@ function renderAssignedBranch(){
 
         Address:
         ${escapeHTML(currentBranch.branchAddress)}
+
+        <br>
+        Passbook Format: ${escapeHTML(currentFormat?.formatName || currentProfile.formatName || "Not Assigned")}
 
     `;
 
@@ -2749,8 +3217,17 @@ async function saveCustomer(printAfter){
         branchName:
             branch.branchName || "",
 
+        bankId:
+            branch.bankId || currentProfile?.bankId || "",
+
         bankName:
-            branch.bankName || "",
+            branch.bankName || currentProfile?.bankName || "",
+
+        formatId:
+            currentProfile?.formatId || "",
+
+        formatName:
+            currentProfile?.formatName || "",
 
         branchCode:
             branch.branchCode || "",
@@ -2860,9 +3337,11 @@ function getAdminSelectedBranch(){
        branch list में पहली active branch इस्तेमाल होगी।
     */
 
-    return branchesCache.find(
-        x => x.status !== "inactive"
-    ) || null;
+    const branch = branchesCache.find(x => x.status !== "inactive") || null;
+    if(branch){
+        currentFormat = formatsCache.find(f=>f.id===branch.formatId) || formatsCache.find(f=>f.bankId===branch.bankId && f.status!=="inactive") || null;
+    }
+    return branch;
 }
 
 
@@ -2902,9 +3381,51 @@ function printAddressLines(value){
         .replace(/,\s*/g, ",\n");
 }
 
+function buildTemplateData(customer){
+    const esc=v=>escapeHTML(String(v??""));
+    let fatherRelation=customer.fatherRelation||"";
+    let fatherName=customer.fatherName||"";
+    if(!fatherName && customer.relation){
+        const m=String(customer.relation).match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
+        if(m){fatherRelation=m[1].toUpperCase();fatherName=m[2].trim();}
+    }
+    const values={
+        BANK_NAME:customer.bankName||"", BRANCH_NAME:customer.branchName||"", BRANCH_CODE:customer.branchCode||"", IFSC:customer.ifscCode||"", MICR:customer.micrCode||"",
+        BRANCH_ADDRESS:customer.branchAddress||"", BRANCH_PHONE:customer.branchPhone||"", TOLL_FREE:customer.tollFree||"", NODAL_OFFICER:customer.nodalOfficer||"",
+        MODE:customer.modeOfOperation||"", CUSTOMER_ID:customer.customerNo||"", AADHAAR:normalizeMaskedAadhaar(customer.aadhaar||""), ACCOUNT_NO:customer.accountNo||"",
+        NAME:`${customer.namePrefix||"MR"} ${customer.customerName||""}`.trim(), ACCOUNT_OPEN_DATE:formatPrintDate(customer.accountOpenDate),
+        FATHER_RELATION:fatherRelation, FATHER_NAME:fatherName, ADDRESS:customer.address||"", NOMINATION:customer.nomination||"", ISSUE_DATE:formatPrintDate(customer.issueDate)
+    };
+    let html=String(currentFormat?.templateHtml||"");
+    Object.entries(values).forEach(([k,v])=>{
+        const re=new RegExp("\\{\\{\\s*"+k+"\\s*\\}\\}","g");
+        html=html.replace(re,esc(v));
+    });
+    return html;
+}
+
+function renderCustomFormat(customer, format){
+    if(!format?.templateHtml) return false;
+    const html=buildTemplateData(customer);
+    const side=format.side||"left";
+    const left=side==="right" ? "48%" : side==="center" ? "24%" : `${Number(format.leftPct??3)}%`;
+    const style=`left:${left};top:${Number(format.topMm??0)}mm;width:${Number(format.widthPct??52)}%;font-size:${Number(format.fontSize??11)}px;line-height:${Number(format.lineHeight??1.3)};`;
+    $("printArea").innerHTML=`<div class="custom-passbook-format" style="${style}">${html}</div>`;
+    return true;
+}
+
 function renderPrint(customer){
 
     const esc = value => escapeHTML(String(value ?? ""));
+
+    if(currentRole === "retailer" && currentProfile?.formatId && currentFormat?.id !== currentProfile.formatId){
+        const f=formatsCache.find(x=>x.id===currentProfile.formatId);
+        if(f) currentFormat=f;
+    }
+
+    if(renderCustomFormat(customer,currentFormat)){
+        return;
+    }
 
     const maskedAadhaar =
         normalizeMaskedAadhaar(customer.aadhaar || "") || "XXXXXXXX";
