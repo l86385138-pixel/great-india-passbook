@@ -385,8 +385,8 @@ th{
 
     .source-pnb-format{
         position:absolute!important;
-        left:3%!important;
-        top:30.5mm!important;
+        left:10.5%!important;
+        top:-1.5mm!important;
         width:52%!important;
         margin:0!important;
         padding:0!important;
@@ -436,6 +436,28 @@ th{
         white-space:nowrap!important;
     }
 }
+
+/* v11: user demo tick/marker must NEVER print */
+@media print {
+  .print-start-marker, .blue-tick, .demo-tick, .tick-marker, .demo-marker {
+    display:none !important;
+    visibility:hidden !important;
+  }
+}
+
+/* v12: blue demo tick is only a positioning reference, never print it */
+.print-start-marker, .blue-tick, .demo-tick, .tick-marker, .demo-marker {
+    display:none !important;
+    visibility:hidden !important;
+}
+
+
+@media print{
+  .print-start-marker,.blue-tick,.demo-tick,.tick-marker,.guide-marker{
+    display:none!important;visibility:hidden!important;
+  }
+}
+
 </style>
 </head>
 
@@ -769,7 +791,7 @@ th{
                         <div class="pdf-import-title">📄 Upload Customer PDF</div>
                         <div class="pdf-import-help">
                             PDF upload करें। सिस्टम PDF से Customer ID, Aadhaar, Account No.,
-                            Customer Name, Account Open Date, Relation, Address, Nomination,
+                            Customer Name (MR/MS/KUMARI), Account Open Date, Father Name (S/O/D/O/W/O), Address, Nomination,
                             Mode और Issue Date निकालकर नीचे form में भर देगा।
                         </div>
                         <div class="pdf-import-row">
@@ -806,7 +828,14 @@ th{
 
                             <div class="form-group">
                                 <label>Customer Name</label>
-                                <input id="customerName" required>
+                                <div style="display:flex;gap:8px;">
+                                    <select id="namePrefix" style="max-width:120px;">
+                                        <option value="MR">MR</option>
+                                        <option value="MS">MS</option>
+                                        <option value="KUMARI">KUMARI</option>
+                                    </select>
+                                    <input id="customerName" required placeholder="Customer name" style="flex:1;">
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -817,6 +846,18 @@ th{
                             <div class="form-group">
                                 <label>Account Open Date</label>
                                 <input type="date" id="accountOpenDate">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Father's Name</label>
+                                <div style="display:flex;gap:8px;">
+                                    <select id="fatherRelation" style="max-width:100px;">
+                                        <option value="S/O">S/O</option>
+                                        <option value="D/O">D/O</option>
+                                        <option value="W/O">W/O</option>
+                                    </select>
+                                    <input id="fatherName" placeholder="Father / Parent name" style="flex:1;">
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -838,10 +879,7 @@ th{
                                 </select>
                             </div>
 
-                            <div class="form-group">
-                                <label>Relation</label>
-                                <input id="relation">
-                            </div>
+                            <input type="hidden" id="relation">
 
                             <div class="form-group full-width">
                                 <label>Address</label>
@@ -2371,12 +2409,15 @@ function parseCustomerPdf(text){
     result.modeOfOperation =
         findPdfValue(joined, /Mode\s*of\s*Operation\s*[:.-]\s*(.+)/i);
 
-    // Relation line such as S/O RAJENDRA PASWAN, D/O..., W/O..., C/O...
+    // Relation line such as S/O FATHER NAME, D/O..., W/O...
     const relationMatch = lines.find(line =>
-        /^(S\/O|D\/O|W\/O|C\/O)\b/i.test(line)
+        /^(S\/O|D\/O|W\/O)\b/i.test(line)
     );
     if(relationMatch){
-        result.relation = relationMatch;
+        const rm = relationMatch.match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
+        result.fatherRelation = rm ? rm[1].toUpperCase() : "S/O";
+        result.fatherName = rm ? rm[2].trim() : "";
+        result.relation = `${result.fatherRelation} ${result.fatherName}`.trim();
     }
 
     // Name: normally the first non-label line immediately after Account No.
@@ -2391,7 +2432,15 @@ function parseCustomerPdf(text){
                 !/^(Account\s*Open\s*Date|Aadhaar?|Aadhar|Mode\s*of|Date\s*of\s*Issue|Nomination|Customer\s*(?:ID|No\.?))/i.test(line) &&
                 !/^(S\/O|D\/O|W\/O|C\/O)\b/i.test(line)
             ){
-                result.customerName = line.replace(/^[:\-]\s*/,"").trim();
+                const nameLine = line.replace(/^[:\-]\s*/,"").trim();
+                const pm = nameLine.match(/^(MR|MS|KUMARI)\s+(.+)$/i);
+                if(pm){
+                    result.namePrefix = pm[1].toUpperCase();
+                    result.customerName = pm[2].trim();
+                }else{
+                    result.namePrefix = "MR";
+                    result.customerName = nameLine;
+                }
                 break;
             }
         }
@@ -2402,7 +2451,16 @@ function parseCustomerPdf(text){
         joined,
         /Customer\s*Name\s*[:.-]\s*(.+)/i
     );
-    if(labelledName) result.customerName = labelledName;
+    if(labelledName){
+        const pm = labelledName.match(/^(MR|MS|KUMARI)\s+(.+)$/i);
+        if(pm){
+            result.namePrefix = pm[1].toUpperCase();
+            result.customerName = pm[2].trim();
+        }else{
+            result.namePrefix = result.namePrefix || "MR";
+            result.customerName = labelledName;
+        }
+    }
 
     const nominationLine = lines.find(line =>
         /Nomination\s+Registered/i.test(line)
@@ -2501,9 +2559,12 @@ async function extractCustomerPdf(){
 
         $("customerNo").value = data.customerNo || "";
         $("accountNo").value = data.accountNo || "";
+        $("namePrefix").value = data.namePrefix || "MR";
         $("customerName").value = data.customerName || "";
         $("aadhaar").value = data.aadhaar || "";
         $("accountOpenDate").value = data.accountOpenDate || "";
+        $("fatherRelation").value = data.fatherRelation || "S/O";
+        $("fatherName").value = data.fatherName || "";
         $("issueDate").value = data.issueDate || today();
         $("modeOfOperation").value = data.modeOfOperation || "SELF";
         $("relation").value = data.relation || "";
@@ -2627,6 +2688,9 @@ async function saveCustomer(printAfter){
 
         accountNo:accountNo,
 
+        namePrefix:
+            $("namePrefix").value || "MR",
+
         customerName:customerName,
 
         aadhaar:
@@ -2635,6 +2699,12 @@ async function saveCustomer(printAfter){
         accountOpenDate:
             $("accountOpenDate").value,
 
+        fatherRelation:
+            $("fatherRelation").value || "S/O",
+
+        fatherName:
+            $("fatherName").value.trim(),
+
         issueDate:
             $("issueDate").value || today(),
 
@@ -2642,7 +2712,7 @@ async function saveCustomer(printAfter){
             $("modeOfOperation").value,
 
         relation:
-            $("relation").value.trim(),
+            `${$("fatherRelation").value || "S/O"} ${$("fatherName").value.trim()}`.trim(),
 
         address:
             $("address").value.trim(),
@@ -2838,6 +2908,16 @@ function renderPrint(customer){
     const issueDate =
         formatPrintDate(customer.issueDate);
 
+    let fatherRelation = customer.fatherRelation || "";
+    let fatherName = customer.fatherName || "";
+    if(!fatherName && customer.relation){
+        const rm = String(customer.relation).match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
+        if(rm){
+            fatherRelation = rm[1].toUpperCase();
+            fatherName = rm[2].trim();
+        }
+    }
+
     /*
       The uploaded 766331.htm uses:
       - body margin-right:45%
@@ -2927,7 +3007,7 @@ function renderPrint(customer){
             </div>
 
             <div class="p-line">
-                <span class="m-l">${esc(customer.customerName || "")}</span>
+                <span class="m-l">${esc(customer.namePrefix || "MR")} ${esc(customer.customerName || "")}</span>
             </div>
 
             <div class="p-line">
@@ -2936,7 +3016,7 @@ function renderPrint(customer){
             </div>
 
             <div class="p-line">
-                <span class="m-l">${esc(customer.relation || "")}</span>
+                <span class="m-l">${esc(fatherRelation)} <span style="margin-left:5px">${esc(fatherName)}</span></span>
             </div>
 
             <div class="p-line">
@@ -3039,6 +3119,10 @@ function clearCustomerForm(){
     $("customerForm").reset();
 
     $("customerId").value = "";
+
+    if($("namePrefix")) $("namePrefix").value = "MR";
+    if($("fatherRelation")) $("fatherRelation").value = "S/O";
+    if($("fatherName")) $("fatherName").value = "";
 
     $("issueDate").value = today();
 
