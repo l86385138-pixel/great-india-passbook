@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Union Bank Account Information Form</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+@page{
+    size:A4 landscape;
+    margin:0;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    background:#e9e9e9;
+    font-family:"Noto Sans Devanagari","Mangal",Arial,sans-serif;
+}
+
+/* =========================
+   A4 LANDSCAPE PAGE
+========================= */
+
+.page{
+    width:1123px;
+    height:794px;
+    margin:20px auto;
+    background:#fff;
+    position:relative;
+    overflow:hidden;
+    border:1px solid #ddd;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header{
+    position:absolute;
+    top:25px;
+    left:0;
+    width:100%;
+    text-align:center;
+    height:70px;
+}
+
+.brand-hi{
+    font-size:23px;
+    font-weight:700;
+    line-height:25px;
+}
+
+.brand-en{
+    font-size:26px;
+    font-weight:700;
+    line-height:30px;
+}
+
+.u-logo{
+    display:inline-block;
+    font-size:38px;
+    font-weight:800;
+    vertical-align:middle;
+    margin:0 7px;
+}
+
+.tagline{
+    font-size:8px;
+    letter-spacing:.3px;
+    margin-top:1px;
+}
+
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.content{
+    position:absolute;
+    left:70px;
+    right:70px;
+    top:120px;
+    font-size:16px;
+}
+
+/*
+   IMPORTANT:
+   Label = fixed 300px
+   Gap = 25px
+   Data = remaining area
+*/
+
+.data-row{
+    display:flex;
+    align-items:flex-start;
+    width:100%;
+    min-height:38px;
+    margin-bottom:3px;
+}
+
+.data-label{
+    width:300px;
+    min-width:300px;
+    max-width:300px;
+    flex:0 0 300px;
+    line-height:30px;
+}
+
+.data-value{
+    margin-left:25px;
+    flex:1 1 auto;
+    min-width:0;
+    line-height:30px;
+
+    /*
+      Data हमेशा पूरा text रहे
+    */
+    white-space:normal;
+    overflow-wrap:break-word;
+    word-break:normal;
+}
+
+/* =========================
+   NAME SECTION
+========================= */
+
+.name-block{
+    width:100%;
+    margin-top:3px;
+    margin-bottom:4px;
+}
+
+.name-title{
+    line-height:30px;
+    margin-bottom:2px;
+}
+
+.name-row{
+    display:flex;
+    align-items:flex-start;
+    width:100%;
+    min-height:31px;
+    margin-left:20px;
+}
+
+.name-small-label{
+    width:65px;
+    min-width:65px;
+    max-width:65px;
+    flex:0 0 65px;
+    line-height:30px;
+}
+
+.name-value{
+    margin-left:20px;
+    flex:1;
+    min-width:0;
+    line-height:30px;
+    white-space:normal;
+    overflow-wrap:break-word;
+    word-break:normal;
+}
+
+/* =========================
+   ADDRESS
+========================= */
+
+.address-row{
+    display:flex;
+    align-items:flex-start;
+    width:100%;
+    margin-top:3px;
+}
+
+.address-label{
+    width:300px;
+    min-width:300px;
+    max-width:300px;
+    flex:0 0 300px;
+    line-height:30px;
+}
+
+.address-value{
+    margin-left:25px;
+    flex:1;
+    min-width:0;
+    line-height:26px;
+    min-height:60px;
+
+    white-space:normal;
+    overflow-wrap:break-word;
+    word-break:normal;
+}
+
+/* =========================
+   BOTTOM SECTION
+========================= */
+
+.bottom{
+    position:absolute;
+    left:70px;
+    right:70px;
+    bottom:42px;
+    height:105px;
+    display:flex;
+    align-items:flex-end;
+    font-size:16px;
+}
+
+.opening{
+    width:650px;
+}
+
+/* DATE */
+
+.opening-date{
+    display:flex;
+    align-items:flex-start;
+    line-height:27px;
+}
+
+.opening-date-label{
+    width:300px;
+    min-width:300px;
+}
+
+.opening-date-value{
+    margin-left:25px;
+    line-height:27px;
+}
+
+/* NOMINATION */
+
+.nomination{
+    display:flex;
+    align-items:flex-start;
+    margin-top:12px;
+    line-height:30px;
+}
+
+.nomination-label{
+    width:300px;
+    min-width:300px;
+}
+
+.nomination-value{
+    margin-left:25px;
+}
+
+/* ACCOUNTANT */
+
+.accountant{
+    flex:1;
+    text-align:right;
+    padding-bottom:4px;
+}
+
+.accountant-line{
+    display:inline-block;
+    width:180px;
+    border-bottom:1px solid #777;
+    height:25px;
+    vertical-align:bottom;
+}
+
+/* =========================
+   NOTE
+========================= */
+
+.note{
+    position:absolute;
+    bottom:10px;
+    left:70px;
+    font-size:10px;
+    color:#777;
+}
+
+/* =========================
+   PRINT BUTTON
+========================= */
+
+.print-btn{
+    position:fixed;
+    top:15px;
+    right:15px;
+    z-index:20;
+    padding:10px 18px;
+    border:0;
+    border-radius:5px;
+    background:#333;
+    color:#fff;
+    cursor:pointer;
+    font-size:14px;
+}
+
+/* =========================
+   RESPONSIVE PREVIEW
+========================= */
+
+@media(max-width:1150px){
+
+    .page{
+        transform-origin:top left;
+        margin:10px;
+
+        transform:
+        scale(
+            calc((100vw - 20px) / 1123)
+        );
+
+        margin-bottom:
+        calc(
+            -794px +
+            (794px * ((100vw - 20px) / 1123))
+            + 10px
+        );
+    }
+}
+
+/* =========================
+   PRINT
+========================= */
+
+@media print{
+
+    html,
+    body{
+        background:#fff;
+        margin:0;
+        padding:0;
+    }
+
+    .page{
+        margin:0;
+        border:0;
+        transform:none !important;
+    }
+
+    .print-btn{
+        display:none !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<button
+    class="print-btn"
+    onclick="window.print()">
+    Print / PDF
+</button>
+
+
+<div class="page">
+
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <div class="header">
+
+        <div class="brand-hi">
+            यूनियन बैंक
+        </div>
+
+        <div class="brand-en">
+
+            <span class="u-logo">
+                U
+            </span>
+
+            Union Bank
+
+            <span style="font-weight:500;">
+                of India
+            </span>
+
+        </div>
+
+        <div class="tagline">
+            Your bank. Your partner.
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <div class="content">
+
+
+        <!-- BRANCH -->
+
+        <div class="data-row">
+
+            <div class="data-label">
+                शाखा <strong>BRANCH</strong>
+            </div>
+
+            <div class="data-value">
+                {{BANK_NAME}} - {{BRANCH_NAME}}
+            </div>
+
+        </div>
+
+
+        <!-- BRANCH ADDRESS -->
+
+        <div class="data-row">
+
+            <div class="data-label">
+                शाखा का पता
+                <strong>Branch Address:</strong>
+            </div>
+
+            <div class="data-value">
+                {{BRANCH_ADDRESS}}
+            </div>
+
+        </div>
+
+
+        <!-- BRANCH PHONE -->
+
+        <div class="data-row">
+
+            <div class="data-label">
+                शाखा का फोन नं./
+                <strong>Branch Phone No.:</strong>
+            </div>
+
+            <div class="data-value">
+                {{BRANCH_PHONE}}
+            </div>
+
+        </div>
+
+
+        <!-- ACCOUNT NUMBER -->
+
+        <div class="data-row">
+
+            <div class="data-label">
+                खाता क्र.
+                <strong>Account No</strong>
+            </div>
+
+            <div class="data-value">
+                {{ACCOUNT_NO}}
+            </div>
+
+        </div>
+
+
+
+        <!-- =========================
+             CUSTOMER NAME
+        ========================== -->
+
+        <div class="name-block">
+
+            <div class="name-title">
+                In the Name of:
+            </div>
+
+
+            <!-- NAME 1 -->
+
+            <div class="name-row">
+
+                <div class="name-small-label">
+                    नाम i)
+                </div>
+
+                <div class="name-value">
+                    {{NAME}}
+                </div>
+
+            </div>
+
+
+            <!-- NAME 2 -->
+
+            <div class="name-row">
+
+                <div class="name-small-label">
+                    ii)
+                </div>
+
+                <div class="name-value">
+                </div>
+
+            </div>
+
+
+            <!-- NAME 3 -->
+
+            <div class="name-row">
+
+                <div class="name-small-label">
+                    iii)
+                </div>
+
+                <div class="name-value">
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- OCCUPATION -->
+
+        <div class="data-row">
+
+            <div class="data-label">
+                पेशा <strong>Occupation</strong>
+            </div>
+
+            <div class="data-value">
+                {{OCCUPATION}}
+            </div>
+
+        </div>
+
+
+
+        <!-- ADDRESS -->
+
+        <div class="address-row">
+
+            <div class="address-label">
+                पता <strong>Address</strong>
+            </div>
+
+            <div class="address-value">
+                {{ADDRESS}}
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =========================
+         BOTTOM
+    ========================== -->
+
+    <div class="bottom">
+
+
+        <div class="opening">
+
+
+            <!-- DATE OF OPENING -->
+
+            <div class="opening-date">
+
+                <div class="opening-date-label">
+
+                    खाता खोलने की तारीख
+                    <br>
+
+                    <span style="font-size:14px;">
+                        Date of Opening A/c
+                    </span>
+
+                </div>
+
+                <div class="opening-date-value">
+
+                    {{ACCOUNT_OPEN_DATE}}
+
+                </div>
+
+            </div>
+
+
+
+            <!-- NOMINATION -->
+
+            <div class="nomination">
+
+                <div class="nomination-label">
+
+                    नामांकन पंजीकृत /
+                    Nomination Registered :
+
+                </div>
+
+                <div class="nomination-value">
+
+                    {{NOMINATION}}
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ACCOUNTANT -->
+
+        <div class="accountant">
+
+            लेखाकार
+            <strong>Accountant</strong>
+
+            <span class="accountant-line"></span>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- OFFICE NOTE -->
+
+    <div class="note">
+        For office use only
+    </div>
+
+
+</div>
+
+</body>
+</html>
