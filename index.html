@@ -1644,13 +1644,47 @@ async function loadBanks(){
     }
 }
 
+function getAllSelectableBanks(){
+    const map = new Map();
+
+    // New banks from /banks collection
+    banksCache.filter(x=>x.status!=="inactive").forEach(bank=>{
+        map.set(String(bank.id), { ...bank, id:String(bank.id) });
+    });
+
+    // Keep old/legacy branches available even if their old bank document
+    // was created before the new Banks system and has no bankId.
+    branchesCache.forEach(branch=>{
+        const name = String(branch.bankName || "").trim();
+        if(!name) return;
+        const exists = [...map.values()].some(b=>
+            String(b.bankName||"").trim().toLowerCase() === name.toLowerCase()
+        );
+        if(!exists){
+            const legacyId = "legacy-bank-" + name.toLowerCase().replace(/[^a-z0-9]+/g,"-");
+            map.set(legacyId, {
+                id:legacyId,
+                bankName:name,
+                bankCode:branch.bankCode || "",
+                status:"active",
+                legacy:true
+            });
+        }
+    });
+
+    return [...map.values()].sort((a,b)=>
+        String(a.bankName||"").localeCompare(String(b.bankName||""))
+    );
+}
+
 function populateBankSelects(){
+    const allBanks = getAllSelectableBanks();
     ["branchBankId","formatBankId","retailerBank"].forEach(id=>{
         const select=$(id);
         if(!select) return;
         const old=select.value;
         select.innerHTML='<option value="">Select Bank</option>';
-        banksCache.filter(x=>x.status!=="inactive").forEach(bank=>{
+        allBanks.forEach(bank=>{
             const opt=document.createElement("option");
             opt.value=bank.id;
             opt.textContent=bank.bankName;
@@ -1659,6 +1693,7 @@ function populateBankSelects(){
         if([...select.options].some(o=>o.value===old)) select.value=old;
     });
 }
+
 
 function renderBanks(){
     const tbody=$( "bankTable" );
@@ -2055,7 +2090,14 @@ function populateBranchSelect(){
     const bankId=$( "retailerBank" )?.value || "";
     const old=select.value;
     select.innerHTML='<option value="">Select Branch</option>';
-    branchesCache.filter(x=>x.status!=="inactive" && (!bankId || x.bankId===bankId)).forEach(branch=>{
+    const selectedBank = getAllSelectableBanks().find(b=>String(b.id)===String(bankId));
+    branchesCache.filter(x=>{
+        if(x.status==="inactive") return false;
+        if(!bankId) return true;
+        if(String(x.bankId||"")===String(bankId)) return true;
+        // Legacy branches may only have bankName, not bankId.
+        return !!selectedBank && String(x.bankName||"").trim().toLowerCase() === String(selectedBank.bankName||"").trim().toLowerCase();
+    }).forEach(branch=>{
         const option=document.createElement("option");
         option.value=branch.id;
         option.textContent=`${branch.branchName} (${branch.branchCode||branch.ifscCode||""})`;
