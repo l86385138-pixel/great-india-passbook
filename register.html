@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Register - Great India Passbook</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#0d47a1,#1976d2)}
+.box{width:100%;max-width:430px;background:#fff;padding:30px;border-radius:16px;box-shadow:0 15px 40px rgba(0,0,0,.25)}
+.logo{width:78px;height:78px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#1976d2,#0d47a1);color:#fff;display:flex;align-items:center;justify-content:center;font-size:50px;font-weight:900;border:5px solid #fff;box-shadow:0 5px 15px rgba(13,71,161,.28)}
+h1{text-align:center;color:#0d47a1;font-size:23px;margin:0}.sub{text-align:center;color:#666;margin:6px 0 22px}.group{margin-bottom:14px}.group label{display:block;font-weight:700;margin-bottom:6px}.group input{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;outline:none}.group input:focus{border-color:#1976d2}.btn{width:100%;border:0;border-radius:8px;padding:12px;background:#1976d2;color:#fff;font-weight:700;cursor:pointer}.btn:disabled{opacity:.65;cursor:not-allowed}.msg{margin-top:12px;padding:10px;border-radius:7px;display:none;font-size:14px}.error{background:#ffe5e5;color:#b00020}.ok{background:#e4f7e9;color:#176b32}.login{text-align:center;margin-top:18px;font-size:14px}.login a{color:#0d47a1;font-weight:700;text-decoration:none}
+.note{font-size:12px;color:#777;text-align:center;margin-top:12px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="box">
+<div class="logo">G</div>
+<h1>Great India Passbook</h1>
+<div class="sub">Create Retailer Account</div>
+<form id="registerForm">
+<div class="group"><label>Full Name</label><input id="name" type="text" required autocomplete="name" placeholder="Enter your name"></div>
+<div class="group"><label>Email</label><input id="email" type="email" required autocomplete="email" placeholder="Enter email"></div>
+<div class="group"><label>Password</label><input id="password" type="password" minlength="6" required autocomplete="new-password" placeholder="Minimum 6 characters"></div>
+<div class="group"><label>Confirm Password</label><input id="confirmPassword" type="password" minlength="6" required autocomplete="new-password" placeholder="Re-enter password"></div>
+<button class="btn" id="registerBtn" type="submit">Create Account</button>
+<div id="error" class="msg error"></div><div id="success" class="msg ok"></div>
+</form>
+<div class="login">Already have an account? <a href="./">Login</a></div>
+<div class="note">Your retailer account will be created with Pending status. Admin can assign the bank, branch and passbook format after approval.</div>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {getAuth,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {getFirestore,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyAf9UziWeVaYdfXZ60GiPCfPn68RUA--wM",authDomain:"great-india-passbook.firebaseapp.com",projectId:"great-india-passbook",storageBucket:"great-india-passbook.firebasestorage.app",messagingSenderId:"969674609314",appId:"1:969674609314:web:ac8aa9117c30da39bfbdfb",measurementId:"G-F35DE2E7HM"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+const $=id=>document.getElementById(id),error=$('error'),success=$('success');
+function show(el,text){error.style.display='none';success.style.display='none';el.textContent=text;el.style.display='block'}
+$('registerForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=$('name').value.trim(),email=$('email').value.trim().toLowerCase(),password=$('password').value,confirm=$('confirmPassword').value,btn=$('registerBtn');
+ if(password!==confirm)return show(error,'Password and Confirm Password do not match.');
+ if(password.length<6)return show(error,'Password must be at least 6 characters.');
+ btn.disabled=true;btn.textContent='Creating Account...';
+ try{
+   const cred=await createUserWithEmailAndPassword(auth,email,password);
+   await setDoc(doc(db,'retailers',cred.user.uid),{uid:cred.user.uid,name,email,role:'retailer',status:'pending',bankId:'',bankName:'',branchId:'',branchName:'',branchCode:'',formatId:'',formatName:'',createdAt:serverTimestamp()});
+   await signOut(auth);
+   show(success,'Account created successfully. Admin approval and bank/branch/format assignment is required before printing.');
+   $('registerForm').reset();
+   setTimeout(()=>location.href='./',2500);
+ }catch(err){
+   console.error(err);
+   let msg=err?.message||'Registration failed.';
+   if(err?.code==='auth/email-already-in-use')msg='This email is already registered. Please login.';
+   if(err?.code==='auth/invalid-email')msg='Please enter a valid email address.';
+   if(err?.code==='auth/weak-password')msg='Password is too weak. Use at least 6 characters.';
+   if(err?.code==='permission-denied')msg='Account created, but retailer profile could not be saved. Firebase Firestore rules need retailer self-registration permission.';
+   show(error,msg);
+ }finally{btn.disabled=false;btn.textContent='Create Account'}
+});
+</script>
+</body>
+</html>
