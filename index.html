@@ -2836,173 +2836,111 @@ function extractPdfLines(items){
 }
 
 function parseCustomerPdf(text){
-    const rawLines = String(text || "")
+    const lines = String(text || "")
         .replace(/\u00a0/g," ")
         .replace(/\r/g,"")
         .split("\n")
         .map(cleanPdfText)
         .filter(Boolean);
 
-    // Rebuild common PDF label/value splits, e.g. "Account No. :" on one
-    // line and the number on the next line.
-    const lines = [];
-    for(let i=0;i<rawLines.length;i++){
-        let line = rawLines[i];
-        if(
-            /^(Customer\s*(?:ID|No\.?)|Aadhaar?\s*No\.?|Aadhar\s*No\.?|Account\s*No\.?|Mode\s*of\s*Operation|Account\s*Open\s*Date|Date\s*of\s*Issue|Father(?:'s)?\s*Name|Guardian\s*Name)\s*[:.-]?\s*$/i.test(line)
-            && rawLines[i+1]
-        ){
-            line += " " + rawLines[++i];
-        }
-        lines.push(line);
-    }
-
-    const joined = lines.join("\n");
     const result = {};
-
-    const find = (regexes) => {
-        for(const re of regexes){
-            const m = joined.match(re);
-            if(m && m[1]) return cleanPdfText(m[1]);
-        }
-        return "";
+    const labelPattern = {
+        customerNo: /^(?:Customer\s*(?:ID|No\.?|Number)|Cust(?:omer)?\s*ID)\s*[:.-]?\s*(.*)$/i,
+        accountNo: /^(?:Account\s*(?:No\.?|Number)|A\/C\s*(?:No\.?|Number))\s*[:.-]?\s*(.*)$/i,
+        aadhaar: /^(?:Masked\s*Aadhaar|Aadhaar?\s*No\.?|Aadhar\s*No\.?)\s*[:.-]?\s*(.*)$/i,
+        accountOpenDate: /^(?:Account\s*Open\s*Date|A\/C\s*Open(?:ing)?\s*Date)\s*[:.-]?\s*(.*)$/i,
+        issueDate: /^(?:Date\s*of\s*Issue|Issue\s*Date)\s*[:.-]?\s*(.*)$/i,
+        modeOfOperation: /^Mode\s*of\s*Operation\s*[:.-]?\s*(.*)$/i,
+        name: /^(?:Customer\s*Name|Name\s*of\s*Customer)\s*[:.-]?\s*(.*)$/i
     };
 
-    result.customerNo = find([
-        /Customer\s*(?:ID|No\.?)\s*[:.-]?\s*([A-Za-z0-9][A-Za-z0-9\-]*)/i
-    ]);
-
-    result.aadhaar = find([
-        /Aadhaar?\s*No\.?\s*[:.-]?\s*([A-Za-z0-9Xx*\- ]+)/i,
-        /Aadhar\s*No\.?\s*[:.-]?\s*([A-Za-z0-9Xx*\- ]+)/i
-    ]);
-
-    result.accountNo = find([
-        /Account\s*No\.?\s*[:.-]?\s*([0-9A-Za-z][0-9A-Za-z\-]*)/i,
-        /A\/C\s*(?:No\.?|Number)\s*[:.-]?\s*([0-9A-Za-z][0-9A-Za-z\-]*)/i
-    ]);
-
-    result.accountOpenDate = pdfDateToInput(find([
-        /Account\s*Open\s*Date\s*[:.-]?\s*([0-9]{1,2}[-\/.][0-9]{1,2}[-\/.][0-9]{4})/i,
-        /A\/C\s*Open(?:ing)?\s*Date\s*[:.-]?\s*([0-9]{1,2}[-\/.][0-9]{1,2}[-\/.][0-9]{4})/i
-    ]));
-
-    result.issueDate = pdfDateToInput(find([
-        /Date\s*of\s*Issue\s*[:.-]?\s*([0-9]{1,2}[-\/.][0-9]{1,2}[-\/.][0-9]{4})/i,
-        /Issue\s*Date\s*[:.-]?\s*([0-9]{1,2}[-\/.][0-9]{1,2}[-\/.][0-9]{4})/i
-    ]));
-
-    result.modeOfOperation = find([
-        /Mode\s*of\s*Operation\s*[:.-]?\s*([^\n]+)/i
-    ]);
-
-    // Customer name: first use an explicit label, otherwise the line after
-    // Account No. in the PNB source format.
-    const labelledName = find([
-        /Customer\s*Name\s*[:.-]?\s*([^\n]+)/i,
-        /Name\s*of\s*Customer\s*[:.-]?\s*([^\n]+)/i
-    ]);
-
-    if(labelledName){
-        const pm = labelledName.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
-        result.namePrefix = pm ? pm[1].toUpperCase() : "MR";
-        result.customerName = pm ? pm[2].trim() : labelledName.trim();
-    }
-
-    const accountIndex = lines.findIndex(line => /Account\s*No\.?|A\/C\s*(?:No\.?|Number)/i.test(line));
-    if(!result.customerName && accountIndex >= 0){
-        // In some multi-page bank PDFs the account-holder name is separated
-        // from the account number by several layout-only lines. Prefer a
-        // clearly labelled MR/MS/KUMARI name in the nearby customer section.
-        for(let i=accountIndex+1;i<Math.min(lines.length,accountIndex+16);i++){
-            const line = cleanPdfText(lines[i]);
-            if(!line) continue;
-            if(/^(Account\s*Open\s*Date|Aadhaar?|Aadhar|Mode\s*of|Date\s*of\s*Issue|Nomination|Customer\s*(?:ID|No\.?)|S\/O|D\/O|W\/O|C\/O)/i.test(line)) continue;
-            if(/^(BO:|MICR\s*Code|IFSC\s*Code|\*Contact|\*Principal|Each\s+depositor)/i.test(line)) continue;
-            const pm = line.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
-            if(pm){
-                result.namePrefix = pm[1].toUpperCase();
-                result.customerName = pm[2].trim();
-                break;
+    function labelledValue(key, validator){
+        const re = labelPattern[key];
+        for(let i=0;i<lines.length;i++){
+            const m = lines[i].match(re);
+            if(!m) continue;
+            let value = cleanPdfText(m[1] || "");
+            if(!value && lines[i+1] && !/^(?:Customer\s*(?:ID|No\.?|Number)|Account\s*(?:No\.?|Number)|A\/C|Masked\s*Aadhaar|Aadhaar?\s*No\.?|Aadhar\s*No\.?|Account\s*Open\s*Date|Date\s*of\s*Issue|Issue\s*Date|Mode\s*of\s*Operation|MR\.?\s|MS\.?\s|KUMARI\s|S\/O|D\/O|W\/O|Nomination|IFSC\s*Code|MICR\s*Code)/i.test(lines[i+1])){
+                value = cleanPdfText(lines[i+1]);
             }
+            if(value && (!validator || validator(value))) return value;
         }
-    }
-    // A holder name can also appear elsewhere in the PDF text layer if the
-    // account number and name are positioned in separate columns.
-    if(!result.customerName){
-        const holderLine = lines.find(line => /^(MR|MS|KUMARI)\.?\s+[A-Z][A-Z .'-]+$/i.test(line));
-        if(holderLine){
-            const pm = holderLine.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
-            result.namePrefix = pm[1].toUpperCase();
-            result.customerName = pm[2].trim();
-        }
+        return "";
     }
 
-    // Parent/father line in the PNB source is S/O, D/O or W/O.
-    let relationIndex = lines.findIndex(line => /^(S\/O|D\/O|W\/O)\b/i.test(line));
+    result.customerNo = labelledValue("customerNo", v => /^[A-Z0-9-]+$/i.test(v));
+    result.accountNo = labelledValue("accountNo", v => /^[A-Z0-9-]+$/i.test(v));
+    result.aadhaar = labelledValue("aadhaar", v => /^[Xx*\d -]+$/.test(v));
+    result.accountOpenDate = pdfDateToInput(labelledValue("accountOpenDate", v => /\d{1,2}[-\/.]\d{1,2}[-\/.]\d{4}/.test(v)));
+    result.issueDate = pdfDateToInput(labelledValue("issueDate", v => /\d{1,2}[-\/.]\d{1,2}[-\/.]\d{4}/.test(v)));
+    result.modeOfOperation = labelledValue("modeOfOperation");
+
+    let holder = labelledValue("name");
+    if(!holder){
+        // Find a real title-prefixed customer name anywhere in the PDF text,
+        // rather than assuming the name is immediately after Account Number.
+        holder = lines.find(line => /^(?:MR|MS|KUMARI)\.?\s+[A-Z][A-Z .'-]+$/i.test(line)) || "";
+    }
+    const holderMatch = holder.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
+    result.namePrefix = holderMatch ? holderMatch[1].toUpperCase() : "MR";
+    result.customerName = holderMatch ? cleanPdfText(holderMatch[2]) : cleanPdfText(holder);
+
+    // Read parent relation/name from S/O, D/O or W/O. Labels may be on one
+    // line and the parent's name on the next.
+    const relationIndex = lines.findIndex(line => /^(S\/O|D\/O|W\/O)\b/i.test(line));
+    let addressStart = -1;
     if(relationIndex >= 0){
         const rm = lines[relationIndex].match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
         result.fatherRelation = rm ? rm[1].toUpperCase() : "S/O";
-        result.fatherName = rm && rm[2] ? rm[2].trim() : "";
-        if(!result.fatherName && lines[relationIndex+1]){
-            const next = cleanPdfText(lines[relationIndex+1]);
-            if(next && !/^(Nomination|Date\s+of\s+Issue|Each\s+depositor|DICGC)/i.test(next)) result.fatherName = next;
+        result.fatherName = cleanPdfText(rm && rm[2] || "");
+        addressStart = relationIndex + 1;
+        if(!result.fatherName && lines[addressStart] &&
+            !/^(?:Nomination|Date\s+of\s+Issue|Each\s+depositor|DICGC)/i.test(lines[addressStart])){
+            result.fatherName = lines[addressStart];
+            addressStart++;
         }
     }else{
-        const parentValue = find([
-            /(?:Father(?:'s)?\s*Name|Guardian\s*Name|Parent\s*Name)\s*[:.-]?\s*([^\n]+)/i
-        ]);
-        if(parentValue){
-            const pm = parentValue.match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
-            result.fatherRelation = pm ? pm[1].toUpperCase() : "S/O";
-            result.fatherName = pm ? pm[2].trim() : parentValue.trim();
+        const parentLine = lines.find(line => /^(?:Father(?:'s)?\s*Name|Guardian\s*Name|Parent\s*Name)\s*[:.-]/i.test(line));
+        if(parentLine){
+            const pm = parentLine.match(/^(?:Father(?:'s)?\s*Name|Guardian\s*Name|Parent\s*Name)\s*[:.-]?\s*(.*)$/i);
+            const rel = cleanPdfText(pm && pm[1] || "").match(/^(S\/O|D\/O|W\/O)\s*(.*)$/i);
+            result.fatherRelation = rel ? rel[1].toUpperCase() : "S/O";
+            result.fatherName = rel ? cleanPdfText(rel[2]) : cleanPdfText(pm && pm[1] || "");
         }
     }
     result.fatherRelation = result.fatherRelation || "S/O";
     result.fatherName = result.fatherName || "";
-    result.relation = `${result.fatherRelation} ${result.fatherName}`.trim();
+    result.relation = cleanPdfText(result.fatherRelation + " " + result.fatherName);
 
-    // Nomination.
-    const nominationLine = lines.find(line => /Nomination\s+Registered/i.test(line));
-    if(nominationLine){
-        result.nomination = /Not\s*Registered/i.test(nominationLine) ? "Not Registered" : "Registered";
-    }
-
-    // Address: collect all PNB address lines after the S/O/D/O/W/O line and
-    // stop at nomination/date/footer. Do not lose lines merely because they
-    // contain a comma, PIN, India, etc.
-    if(relationIndex >= 0){
+    // Address belongs only to the lines after the parent name. Stop at bank
+    // footer/nomination fields; never append account IDs or operation mode.
+    if(addressStart >= 0){
         const addressLines = [];
-        for(let i=relationIndex+1;i<lines.length;i++){
+        for(let i=addressStart;i<lines.length;i++){
             const line = cleanPdfText(lines[i]);
-            if(!line) continue;
-            if(/Nomination\s+Registered/i.test(line) || /Date\s+of\s+Issue/i.test(line)) break;
-            if(/Each\s+depositor\s+is\s+insured|DICGC|subject\s+to\s+change/i.test(line)) break;
-            if(/^(Mode\s+of\s+Operation|Customer\s*(?:ID|No\.?)|Aadhaar?|Aadhar|Account\s*No\.?)\b/i.test(line)) continue;
+            if(/^(?:Nomination\s+Registered|Date\s+of\s+Issue|Issue\s+Date|Each\s+depositor\s+is\s+insured|DICGC|\*Contact|\*Principal\s+Nodal|MICR\s*Code|IFSC\s*Code)/i.test(line)) break;
+            if(/^(?:Mode\s+of\s+Operation|Customer\s*(?:ID|No\.?|Number)|Account\s*(?:No\.?|Number)|A\/C\s*(?:No\.?|Number)|Masked\s*Aadhaar|Aadhaar?\s*No\.?|Aadhar\s*No\.?|Account\s*Open\s*Date)\b/i.test(line)) continue;
             if(result.customerName && line.toUpperCase() === result.customerName.toUpperCase()) continue;
             if(result.fatherName && line.toUpperCase() === result.fatherName.toUpperCase()) continue;
+            if(/^(?:S\/O|D\/O|W\/O)\b/i.test(line)) continue;
             addressLines.push(line);
         }
         result.address = addressLines.join("\n").trim();
     }
-
     if(!result.address){
-        const addressMatch = joined.match(/Address\s*[:.-]?\s*([\s\S]+?)(?:Nomination\s+Registered|Date\s+of\s+Issue|Each\s+depositor)/i);
-        if(addressMatch) result.address = addressMatch[1].split("\n").map(cleanPdfText).filter(Boolean).join("\n").trim();
+        const addressMatch = lines.join("\n").match(/Address\s*[:.-]?\s*([\s\S]+?)(?:Nomination\s+Registered|Date\s+of\s+Issue|Each\s+depositor)/i);
+        if(addressMatch) result.address = addressMatch[1].split("\n").map(cleanPdfText).filter(Boolean).join("\n");
     }
+
+    const nominationLine = lines.find(line => /Nomination\s+Registered/i.test(line));
+    if(nominationLine) result.nomination = /Not\s*Registered/i.test(nominationLine) ? "Not Registered" : "Registered";
 
     result.aadhaar = normalizeMaskedAadhaar(result.aadhaar);
-    result.namePrefix = result.namePrefix || "MR";
-
-    if(result.modeOfOperation){
-        const mode = result.modeOfOperation.toUpperCase();
-        if(mode.includes("EITHER OR SURVIVOR")) result.modeOfOperation = "EITHER OR SURVIVOR";
-        else if(mode.includes("FORMER OR SURVIVOR")) result.modeOfOperation = "FORMER OR SURVIVOR";
-        else if(mode.includes("JOINT")) result.modeOfOperation = "JOINT";
-        else result.modeOfOperation = "SELF";
-    }else{
-        result.modeOfOperation = "SELF";
-    }
+    const mode = cleanPdfText(result.modeOfOperation).toUpperCase();
+    if(mode.includes("EITHER OR SURVIVOR")) result.modeOfOperation = "EITHER OR SURVIVOR";
+    else if(mode.includes("FORMER OR SURVIVOR")) result.modeOfOperation = "FORMER OR SURVIVOR";
+    else if(mode.includes("JOINT")) result.modeOfOperation = "JOINT";
+    else result.modeOfOperation = "SELF";
 
     return result;
 }
