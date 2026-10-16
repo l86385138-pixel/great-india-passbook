@@ -348,116 +348,58 @@ th{
 .bank-format-help{font-size:13px;color:#555;line-height:1.5}
 code{background:#eef4fb;padding:2px 5px;border-radius:4px;margin:2px;display:inline-block}
 
-/* PRINT - CENTERED ON A4 BLANK PAGE */
+/* PRINT - A5 PASSBOOK FORMAT */
 #printArea{display:none;}
 
 @media print{
-    @page{
-        size:A4 portrait;
-        margin:0;
-    }
+    @page{size:A5 portrait;}
 
     html,body{
-        width:210mm!important;
-        height:297mm!important;
-        margin:0!important;
-        padding:0!important;
-        background:#fff!important;
+        width:auto!important;height:auto!important;
+        margin:0!important;padding:0!important;background:#fff!important;
     }
-
     body *{visibility:hidden!important;}
     #printArea,#printArea *{visibility:visible!important;}
 
-    /*
-      BOOK / PASSBOOK POSITION:
-      The original 766331 format is a narrow left-side print layout.
-      Keep it on the LEFT side of the sheet and move it slightly ABOVE
-      the vertical middle so it sits like the left page of an open book.
-    */
     #printArea{
-        display:block!important;
-        position:absolute!important;
-        left:0!important;
-        top:50mm!important;
-        width:210mm!important;
-        height:297mm!important;
-        margin:0!important;
-        padding:0!important;
-        background:#fff!important;
-        overflow:hidden!important;
+        display:block!important;position:absolute!important;
+        left:0!important;top:0!important;width:100%!important;
+        height:auto!important;margin:0!important;padding:0!important;
+        background:#fff!important;overflow:visible!important;
     }
-
     .custom-passbook-format{
-        position:absolute!important;
-        margin:0!important;
-        padding:0!important;
-        background:#fff!important;
-        box-sizing:border-box!important;
-        color:#000!important;
+        position:absolute!important;margin:0!important;padding:0!important;
+        background:#fff!important;box-sizing:border-box!important;color:#000!important;
     }
-
     .source-pnb-format{
-        position:absolute!important;
-        left:3%!important;
-        top:-1.5mm!important;
-        width:52%!important;
-        margin:0!important;
-        padding:0!important;
-        font-family:sans-serif!important;
-        line-height:1.3!important;
-        font-size:11px!important;
-        font-weight:400!important;
-        color:#000!important;
-        background:#fff!important;
-        box-sizing:border-box!important;
+        position:relative!important;left:0!important;top:0!important;
+        width:94%!important;max-width:94%!important;
+        margin:0 auto!important;padding:0!important;
+        font-family:sans-serif!important;line-height:1.3!important;
+        font-size:11px!important;font-weight:400!important;color:#000!important;
+        background:#fff!important;box-sizing:border-box!important;overflow:visible!important;
     }
-
-
-    .source-pnb-format,
-    .source-pnb-format *,
-    .source-pnb-format span,
-    .source-pnb-format div {
-        color:#000!important;
-        -webkit-print-color-adjust: exact!important;
-        print-color-adjust: exact!important;
+    .source-pnb-format,.source-pnb-format *,.source-pnb-format span,.source-pnb-format div{
+        color:#000!important;-webkit-print-color-adjust:exact!important;
+        print-color-adjust:exact!important;box-sizing:border-box!important;
     }
-
-    .source-pnb-format .m-l{
-        margin-left:40px!important;
-    }
-
-    .source-pnb-format .m-l-15{
-        margin-left:15px!important;
-    }
-
-    .source-pnb-format .top-space{
-        height:0!important;
-        line-height:1.3!important;
-    }
-
+    .source-pnb-format .m-l{margin-left:40px!important;}
+    .source-pnb-format .m-l-15{margin-left:15px!important;}
+    .source-pnb-format .top-space{height:0!important;line-height:1.3!important;}
     .source-pnb-format .p-line{
-        margin-top:0!important;
-        margin-bottom:0!important;
-        padding:0!important;
-        font:inherit!important;
-        white-space:nowrap!important;
+        margin-top:0!important;margin-bottom:0!important;padding:0!important;
+        font:inherit!important;white-space:nowrap!important;overflow:visible!important;
     }
-
-    .source-pnb-format .p-gap{
-        height:22px!important;
-        line-height:1.3!important;
+    .source-pnb-format .branch-header-line{
+        white-space:normal!important;overflow:visible!important;
+        overflow-wrap:anywhere!important;word-break:normal!important;max-width:100%!important;
     }
-
-    .source-pnb-format .p-small-gap{
-        height:11px!important;
-        line-height:1.3!important;
+    .source-pnb-format .branch-header-line span{
+        white-space:normal!important;overflow-wrap:anywhere!important;
     }
-
-    .source-pnb-format .p-address{
-        margin:0!important;
-        padding:0!important;
-        white-space:nowrap!important;
-    }
+    .source-pnb-format .p-gap{height:22px!important;line-height:1.3!important;}
+    .source-pnb-format .p-small-gap{height:11px!important;line-height:1.3!important;}
+    .source-pnb-format .p-address{margin:0!important;padding:0!important;white-space:nowrap!important;}
 }
 
 /* v11: user demo tick/marker must NEVER print */
@@ -3794,7 +3736,7 @@ function renderPrint(customer){
 
             <div class="top-space"></div>
 
-            <div class="p-line">
+            <div class="p-line branch-header-line">
                 <span class="m-l">BO: </span><span>${esc(branchName)}</span>
             </div>
 
