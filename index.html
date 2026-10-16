@@ -2911,15 +2911,30 @@ function parseCustomerPdf(text){
 
     const accountIndex = lines.findIndex(line => /Account\s*No\.?|A\/C\s*(?:No\.?|Number)/i.test(line));
     if(!result.customerName && accountIndex >= 0){
-        for(let i=accountIndex+1;i<Math.min(lines.length,accountIndex+8);i++){
+        // In some multi-page bank PDFs the account-holder name is separated
+        // from the account number by several layout-only lines. Prefer a
+        // clearly labelled MR/MS/KUMARI name in the nearby customer section.
+        for(let i=accountIndex+1;i<Math.min(lines.length,accountIndex+16);i++){
             const line = cleanPdfText(lines[i]);
             if(!line) continue;
             if(/^(Account\s*Open\s*Date|Aadhaar?|Aadhar|Mode\s*of|Date\s*of\s*Issue|Nomination|Customer\s*(?:ID|No\.?)|S\/O|D\/O|W\/O|C\/O)/i.test(line)) continue;
             if(/^(BO:|MICR\s*Code|IFSC\s*Code|\*Contact|\*Principal|Each\s+depositor)/i.test(line)) continue;
             const pm = line.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
-            result.namePrefix = pm ? pm[1].toUpperCase() : "MR";
-            result.customerName = pm ? pm[2].trim() : line;
-            break;
+            if(pm){
+                result.namePrefix = pm[1].toUpperCase();
+                result.customerName = pm[2].trim();
+                break;
+            }
+        }
+    }
+    // A holder name can also appear elsewhere in the PDF text layer if the
+    // account number and name are positioned in separate columns.
+    if(!result.customerName){
+        const holderLine = lines.find(line => /^(MR|MS|KUMARI)\.?\s+[A-Z][A-Z .'-]+$/i.test(line));
+        if(holderLine){
+            const pm = holderLine.match(/^(MR|MS|KUMARI)\.?\s+(.+)$/i);
+            result.namePrefix = pm[1].toUpperCase();
+            result.customerName = pm[2].trim();
         }
     }
 
@@ -3051,7 +3066,7 @@ async function extractCustomerPdf(){
         // Branch is intentionally NOT taken from PDF.
         // Retailer's branch remains the Admin-assigned branch.
         const found = [data.customerNo,data.aadhaar,data.accountNo,data.customerName,data.accountOpenDate,data.fatherName,data.address,data.issueDate].filter(Boolean).length;
-        pdfStatus(`PDF से ${found}/8 मुख्य fields extract हुईं। Data form में भर दिया गया है। अब Save & Print दबाएँ।`, found < 5);
+        pdfStatus(`PDF के ${pdf.numPages} page scan किए गए। ${found}/8 मुख्य fields extract हुईं। Data form में भर दिया गया है। अब Save & Print दबाएँ।`, found < 5);
 
     }catch(error){
         console.error("PDF extraction failed:", error);
