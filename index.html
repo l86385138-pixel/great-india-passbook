@@ -2859,7 +2859,7 @@ function setAddressFields(value){
     data.addressVillage=first.replace(/\bPO\s*[-:]?\s*[^,]+/ig,"").replace(/\bPS\s*[-:]?\s*[^,]+/ig,"").replace(/,\s*,/g,",").replace(/^[,\s]+|[,\s]+$/g,"").trim();
     const knownDistricts=["AURANGABAD","GAYA","PATNA","JEHANABAD","ARWAL","ROHTAS","NALANDA","NAWADA","GOPALGANJ","SIWAN","SARAN","BHOJPUR","BUXAR","BANKA","JAMUI","MUNGER","BHAGALPUR","KATIHAR","PURNIA","MADHEPURA","SUPAUL","DARBHANGA","MADHUBANI","SITAMARHI","MUZAFFARPUR","VAISHALI","SAMASTIPUR","BEGUSARAI","LAKHISARAI","SHEIKHPURA","KISHANGANJ","ARARIA","WEST CHAMPARAN","EAST CHAMPARAN","CHAMPARAN"];
     data.addressDistrict=knownDistricts.find(d=>new RegExp("\\b"+d.replace(/ /g,"\\s+")+"\\b","i").test(joined))||"";
-    data.addressState=(joined.match(/\b(BIHAR|JHARKHAND|UTTAR PRADESH|WEST BENGAL)\b/i)||[])[1]||"";
+    data.addressState=(joined.match(/\b(BIHAR|JHARKHAND|UTTAR PRADESH|WEST BENGAL)\b/i)||[])[1]||(/\bBH\b/i.test(joined)?"BIHAR":"");
     data.addressCountry=(joined.match(/\b(INDIA)\b/i)||[])[1]||"INDIA";
     // If the source has the standard multiline passbook address, preserve
     // its lines and do not invent a PO/PS or district from unrelated fields.
@@ -2904,32 +2904,29 @@ function parseCustomerPdf(text){
         const accountLine=pickLine(/\b\d{15,18}\b/,/\b(?:mobile|phone|tel)\b/i);
         result.accountNo=accountLine?(accountLine.match(/\b\d{15,18}\b/)||[])[0]:"";
 
-        // Prefer the value row aligned to the identity headings, rather than
-        // the first all-caps line elsewhere in the five-page form.
+        // PNB PDF text extraction may put the identity values on separate
+        // lines or mix case. Use the K-prefixed reference row as an anchor.
         let name="";
-        const identityHeading=lines.findIndex(v=>/Reference\s*No/i.test(v)&&/Customer\s*Name/i.test(v)&&/Sex/i.test(v));
-        const identityEnd=lines.findIndex((v,i)=>i>identityHeading&&/Mode\s*of\s*Operation|5\.?\s*ADDRESS/i.test(v));
-        const identityRows=lines.slice(identityHeading>=0?identityHeading+1:0,identityEnd>identityHeading?identityEnd:Math.min(lines.length, (identityHeading>=0?identityHeading:0)+14));
-        for(const row of identityRows){
-            const m=row.match(/\bK\d{8,}\s+([A-Z][A-Z .'-]{1,}?)\s+(?=[FM]\b)/i);
-            if(m){name=cleanPdfText(m[1]);break;}
-        }
-        if(!name){
-            const refIndex=lines.findIndex(v=>/\bK\d{8,}\b/i.test(v));
-            if(refIndex>=0){
-                const same=lines[refIndex];
-                const m=same.match(/\bK\d{8,}\s+([A-Z][A-Z .'-]{1,}?)(?=\s+(?:F|M)\b)/i);
-                if(m)name=cleanPdfText(m[1]);
-                if(!name)for(let i=refIndex+1;i<Math.min(lines.length,refIndex+5);i++){
+        const refIndex=lines.findIndex(v=>/\bK\d{8,}\b/i.test(v));
+        if(refIndex>=0){
+            const refLine=lines[refIndex];
+            const same=refLine.match(/\bK\d{8,}\s+([A-Z][A-Z .'-]{1,}?)(?=\s+\b[FM]\b)/i);
+            if(same)name=cleanPdfText(same[1]);
+            if(!name){
+                for(let i=refIndex;i<Math.min(lines.length,refIndex+8);i++){
                     const v=cleanPdfText(lines[i]);
-                    if(/^(?:F|M)$/i.test(v)||/\bR\d{6,}\b|\b\d{15,18}\b|X{2,}\d{3,}/i.test(v))continue;
-                    if(/^[A-Z][A-Z .'-]{2,}$/i.test(v)&&!/(?:ACCOUNT|CUSTOMER|AADHAAR|MOBILE|MODE|ADDRESS|REFERENCE|SEX|OPENING FORM)/i.test(v)){name=v;break;}
+                    if(/\b(?:R\d{6,}|\d{15,18}|X{2,}\d{3,}|\d{10,})\b/i.test(v))continue;
+                    const candidate=v.replace(/\b(?:Customer\s*Name|Sex|Account\s*No|Customer\s*ID|Aadhaar\s*No|Mobile\s*No|Reference\s*No)\b/ig,"").trim();
+                    const m=candidate.match(/^(?:(MR|MS|MRS|KUMARI)\.?\s+)?([A-Z][A-Z .'-]{2,}?)(?:\s+[FM])?$/i);
+                    if(m && !/^(ACCOUNT|CUSTOMER|AADHAAR|MOBILE|MODE|ADDRESS|REFERENCE|SEX|OPENING FORM|OTHER INDIVIDUAL)$/i.test(m[2])){
+                        name=(m[1]?m[1]+" ":"")+m[2];break;
+                    }
                 }
             }
         }
         if(!name){
             const stop=/^(?:ACCOUNT OPENING FORM|OTHER INDIVIDUAL|SELF|F|M|INDIAN|HINDU|PRIMARY|HOUSE WIFE|FORM-60|HOUWF|MAR|UIDAI|BOTH MODES|TERMS AND CONDITIONS|CUSTOMER PROFILE|KNOW YOUR CUSTOMER|REFERENCE NO|CUSTOMER NAME|SEX|ACCOUNT NO|CUSTOMER ID|AADHAAR NO|MOBILE NO)$/i;
-            name=lines.find(v=>/^[A-Z][A-Z .'-]{2,}$/i.test(v)&&!stop.test(v)&&!/\b(?:K\d{8,}|R\d{6,}|X{2,}\d{3,}|\d{10,})\b/i.test(v))||"";
+            name=lines.find(v=>/^(?:(?:MR|MS|MRS|KUMARI)\.?\s+)?[A-Z][A-Z .'-]{2,}$/i.test(v)&&!stop.test(v)&&!/\b(?:K\d{8,}|R\d{6,}|X{2,}\d{3,}|\d{10,})\b/i.test(v))||"";
         }
         if(name){
             name=cleanPdfText(name).replace(/\s+/g," ");
@@ -2950,32 +2947,40 @@ function parseCustomerPdf(text){
             const meaningful=block.filter(line=>! /^(?:5\.?\s*ADDRESS|Customer Photo|Reference No|Customer Name|Sex|Account No|Customer ID|Aadhaar No|Mobile No)\b/i.test(line));
             result.address=meaningful.join("\n").replace(/\n{2,}/g,"\n").trim();
         }
-        // Father/guardian name belongs to the customer-profile section.
-        // PDFs often print the label in one row and the value on a later row
-        // alongside marital status; avoid accidentally taking the next label.
+        // Father/guardian value can be a standalone row or the uppercase
+        // name immediately before the marital-status value (e.g. MUNNA BIND / MAR).
         let father="";
         const profileStart=lines.findIndex(v=>/6\.?\s*CUSTOMER\s+PROFILE/i.test(v));
         const kycStart=lines.findIndex((v,i)=>i>profileStart&&/7\.?\s*KNOW\s+YOUR\s+CUSTOMER|KYC\s+DOCUMENTS/i.test(v));
-        const profile=lines.slice(profileStart>=0?profileStart:0,kycStart>profileStart?kycStart:Math.min(lines.length,(profileStart>=0?profileStart:0)+35));
+        const profile=lines.slice(profileStart>=0?profileStart:0,kycStart>profileStart?kycStart:Math.min(lines.length,(profileStart>=0?profileStart:0)+45));
         const fatherLabelIndex=profile.findIndex(v=>/Name\s+of\s+Father\s*\/\s*Guardian/i.test(v));
+        const isNameValue=v=>{
+            const x=cleanPdfText(v).replace(/\s+/g," ");
+            return /^[A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3}$/i.test(x)
+                && !/^(?:HOUSE WIFE|HOUSEWIFE|INDIAN|HINDU|PRIMARY|FORM SIXTY|FORM-60|MARRIED|UNMARRIED|SINGLE|CUSTOMER PROFILE|NAME OF FATHER|MARITAL STATUS|OCCUPATION TYPE|DESIGNATION PROFESSION|ANNUAL INCOME|CLASSIFICATION)$/i.test(x);
+        };
         if(fatherLabelIndex>=0){
-            const same=profile[fatherLabelIndex].match(/Name\s+of\s+Father\s*\/\s*Guardian\s*[:.-]?\s+([A-Z][A-Z .'-]{2,})/i);
+            const same=profile[fatherLabelIndex].match(/Name\s+of\s+Father\s*\/\s*Guardian\s*[:.-]?\s*([A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3})/i);
             if(same)father=cleanPdfText(same[1]);
+            // Check nearby rows first; skip field labels and profile values.
             if(!father){
-                for(let i=fatherLabelIndex+1;i<Math.min(profile.length,fatherLabelIndex+8);i++){
+                for(let i=fatherLabelIndex+1;i<Math.min(profile.length,fatherLabelIndex+12);i++){
                     const v=cleanPdfText(profile[i]);
-                    if(!v||/Name\s+of\s+Father|Marital\s+Status|CUSTOMER\s+PROFILE|Occupation|Designation|Annual\s+Income|Classification|KYC/i.test(v))continue;
-                    const m=v.match(/\b([A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3})\s+(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i);
-                    if(m){father=cleanPdfText(m[1]);break;}
-                    if(/^[A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3}$/i.test(v)&&!/^(?:HOUSE WIFE|INDIAN|HINDU|PRIMARY|FORM SIXTY)$/i.test(v)){father=v;break;}
+                    if(/\b(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i.test(v)){
+                        const before=v.match(/\b([A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3})\s+(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i);
+                        if(before){father=cleanPdfText(before[1]);break;}
+                    }
+                    if(isNameValue(v)){father=v;break;}
                 }
             }
         }
         if(!father){
-            const mar=profile.find(v=>/\b(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i.test(v));
-            if(mar){
-                const before=mar.match(/\b([A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3})\s+(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i);
+            const maritalIndex=profile.findIndex(v=>/\b(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i.test(v));
+            if(maritalIndex>=0){
+                const v=profile[maritalIndex];
+                const before=v.match(/\b([A-Z][A-Z'-]+(?:\s+[A-Z][A-Z'-]+){1,3})\s+(?:MAR|MARRIED|UNMARRIED|SINGLE)\b/i);
                 if(before)father=cleanPdfText(before[1]);
+                if(!father && maritalIndex>0 && isNameValue(profile[maritalIndex-1]))father=cleanPdfText(profile[maritalIndex-1]);
             }
         }
         if(father){
