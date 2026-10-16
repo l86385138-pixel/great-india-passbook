@@ -2845,31 +2845,29 @@ function extractPdfLines(items){
 }
 
 function setAddressFields(value){
-    const raw=String(value||"").replace(/\r/g,"");
-    let lines=raw.split("\n").map(v=>v.trim()).filter(Boolean);
-    if(lines.length===1) lines=lines[0].split(/,(?!\s*(?:PO|PS)\s*[-:])/i).map(v=>v.trim()).filter(Boolean);
-    const fields=["addressVillage","addressPost","addressPS","addressDistrict","addressState","addressCountry","addressPin"];
+    const raw=String(value||"").replace(/\r/g,"").trim();
+    const lines=raw.split("\n").map(v=>v.trim()).filter(Boolean);
+    const joined=lines.join(", ").replace(/\s+/g," ");
     const data={addressVillage:"",addressPost:"",addressPS:"",addressDistrict:"",addressState:"",addressCountry:"",addressPin:""};
-    const joined=lines.join(", ");
     const pin=joined.match(/(?:PIN\s*(?:CODE)?\s*[:.-]?\s*)?(\d{6})\b/i);
     if(pin)data.addressPin=pin[1];
-    const ps=joined.match(/\bPS\s*[-:]?\s*([^,\n]+)/i);
     const po=joined.match(/\bPO\s*[-:]?\s*([^,\n]+)/i);
-    if(ps)data.addressPS=ps[1].trim();
+    const ps=joined.match(/\bPS\s*[-:]?\s*([^,\n]+)/i);
     if(po)data.addressPost=po[1].trim();
-    const cleaned=lines.filter(v=>!/^PIN\b/i.test(v)&&!/^\d{6}$/.test(v));
-    if(cleaned.length>=4){
-        data.addressVillage=cleaned[0].replace(/\b(?:PO|PS)\s*[-:].*$/i,"").trim();
-        data.addressDistrict=cleaned.find(v=>/district|aurangabad|gaya|patna|jehanabad|arwal|rohtas/i.test(v))||cleaned[cleaned.length-3]||"";
-        data.addressState=cleaned.find(v=>/\bBIHAR\b/i.test(v))||cleaned[cleaned.length-2]||"";
-        data.addressCountry=cleaned.find(v=>/\bINDIA\b/i.test(v))||"INDIA";
-    }else{
-        data.addressVillage=cleaned.filter(v=>!/^\b(?:BIHAR|INDIA)\b$/i.test(v)&&!/^\d{6}$/.test(v)).slice(0,1).join("");
-        data.addressDistrict=cleaned.find(v=>/aurangabad|gaya|patna|jehanabad|arwal|rohtas/i.test(v))||"";
-        data.addressState=cleaned.find(v=>/^BIHAR$/i.test(v))||"";
-        data.addressCountry=cleaned.find(v=>/^INDIA$/i.test(v))||"INDIA";
+    if(ps)data.addressPS=ps[1].trim();
+    const first=lines.find(v=>/\b(?:VILL|VILLAGE|VIL|H\.NO|HOUSE|WARD|MOHALLA|MOHALA|TOLA|ROAD|STREET)\b/i.test(v))||lines[0]||"";
+    data.addressVillage=first.replace(/\bPO\s*[-:]?\s*[^,]+/ig,"").replace(/\bPS\s*[-:]?\s*[^,]+/ig,"").replace(/,\s*,/g,",").replace(/^[,\s]+|[,\s]+$/g,"").trim();
+    const knownDistricts=["AURANGABAD","GAYA","PATNA","JEHANABAD","ARWAL","ROHTAS","NALANDA","NAWADA","GOPALGANJ","SIWAN","SARAN","BHOJPUR","BUXAR","BANKA","JAMUI","MUNGER","BHAGALPUR","KATIHAR","PURNIA","MADHEPURA","SUPAUL","DARBHANGA","MADHUBANI","SITAMARHI","MUZAFFARPUR","VAISHALI","SAMASTIPUR","BEGUSARAI","LAKHISARAI","SHEIKHPURA","KISHANGANJ","ARARIA","WEST CHAMPARAN","EAST CHAMPARAN","CHAMPARAN"];
+    data.addressDistrict=knownDistricts.find(d=>new RegExp("\\b"+d.replace(/ /g,"\\s+")+"\\b","i").test(joined))||"";
+    data.addressState=(joined.match(/\b(BIHAR|JHARKHAND|UTTAR PRADESH|WEST BENGAL)\b/i)||[])[1]||"";
+    data.addressCountry=(joined.match(/\b(INDIA)\b/i)||[])[1]||"INDIA";
+    // If the source has the standard multiline passbook address, preserve
+    // its lines and do not invent a PO/PS or district from unrelated fields.
+    if(lines.length>=3 && !data.addressDistrict){
+        const candidates=lines.filter(v=>!/^PIN\b/i.test(v)&&!/^\d{6}$/.test(v)&&!/\b(?:PO|PS)\s*[-:]/i.test(v));
+        if(candidates.length>=2)data.addressDistrict=candidates.find(v=>/^[A-Z .'-]+$/i.test(v)&&v.length>2&&!/^(BIHAR|INDIA)$/i.test(v))||"";
     }
-    fields.forEach(id=>{const el=document.getElementById(id);if(el)el.value=data[id]||"";});
+    ["addressVillage","addressPost","addressPS","addressDistrict","addressState","addressCountry","addressPin"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=data[id]||"";});
     const hidden=document.getElementById("address");if(hidden)hidden.value=buildAddressValue();
 }
 function buildAddressValue(){
@@ -2927,16 +2925,21 @@ function parseCustomerPdf(text){
         if(name){
             const pm=name.match(/^(MR|MS|MRS|KUMARI)\.?\s+(.+)$/i);
             if(pm){result.namePrefix=pm[1].toUpperCase()==="MRS"?"MS":pm[1].toUpperCase();result.customerName=pm[2].trim();}
-            else {result.namePrefix=/\bKUMARI\b/i.test(name)?"KUMARI":"MS";result.customerName=name;}
+            else if(/\bKUMARI$/i.test(name)){result.namePrefix="KUMARI";result.customerName=name.replace(/\s+KUMARI$/i,"").trim();}
+            else {result.namePrefix="MR";result.customerName=name;}
         }
 
         const modeMatch=joined.match(/Mode\s*of\s*Operation\s*[:.]?\s*(SELF|EITHER\s+OR\s+SURVIVOR|JOINT|FORMER\s+OR\s+SURVIVOR)\b/i);
         if(modeMatch) result.modeOfOperation=modeMatch[1].toUpperCase().replace(/\s+/g," ");
 
-        // Address is the content of section 5 only, not profile or nominee data.
+        // Parse only section 5. PNB PDFs can repeat the address in multiple
+        // columns, so prefer the line containing VILL/PO/PS and retain lines.
         const addressMatch=joined.match(/5\.?\s*ADDRESS\s*:\s*([\s\S]*?)(?=6\.?\s*CUSTOMER\s+PROFILE|7\.?\s*KNOW\s+YOUR\s+CUSTOMER|KYC\s+DOCUMENTS)/i);
         if(addressMatch){
-            result.address=cleanPdfText(addressMatch[1].replace(/\n/g,", ").replace(/\s*,\s*/g,", ").replace(/(?:Flat No\.\/Bldg\. Name|Street\s*\/\s*Road\s*\/\s*Locality|City\s*\/\s*District\s*\/\s*State.*)$/i,"").replace(/,\s*,/g,", ").replace(/^[, ]+|[, ]+$/g,""));
+            const block=addressMatch[1].split("\n").map(cleanPdfText).filter(Boolean)
+                .filter(line=>! /^(?:Flat No\.?\/Bldg\.? Name|Street\s*\/\s*Road\s*\/\s*Locality|City\s*\/\s*District\s*\/\s*State|Tel\.?\s*No\.?|Email)\b/i.test(line));
+            const meaningful=block.filter(line=>! /^(?:5\.?\s*ADDRESS|Customer Photo|Reference No|Customer Name|Sex|Account No|Customer ID|Aadhaar No|Mobile No)\b/i.test(line));
+            result.address=meaningful.join("\n").replace(/\n{2,}/g,"\n").trim();
         }
         let father=valueAfterLabel("Name\\s+of\\s+Father\\s*\\/\\s*Guardian");
         if(!father){
