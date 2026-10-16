@@ -427,7 +427,7 @@ code{background:#eef4fb;padding:2px 5px;border-radius:4px;margin:2px;display:inl
   }
 }
 
-</style>
+.address-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.address-fields .form-group{margin:0;min-width:0}.address-fields input{width:100%;box-sizing:border-box}@media(max-width:600px){.address-fields{grid-template-columns:1fr}}</style>
 </head>
 
 <body>
@@ -1031,8 +1031,17 @@ code{background:#eef4fb;padding:2px 5px;border-radius:4px;margin:2px;display:inl
                             <input type="hidden" id="relation">
 
                             <div class="form-group full-width">
-                                <label>Address</label>
-                                <textarea id="address" rows="3"></textarea>
+                                <label>Address (PDF के अनुसार अलग-अलग बॉक्स)</label>
+                                <div class="address-fields">
+                                    <div class="form-group"><label>Village / House / Street</label><input id="addressVillage" placeholder="VILL-MALWAN, KHUDWAN, OBRA"></div>
+                                    <div class="form-group"><label>Post Office (PO)</label><input id="addressPost" placeholder="POST OFFICE"></div>
+                                    <div class="form-group"><label>Police Station (PS)</label><input id="addressPS" placeholder="PS - OBRA"></div>
+                                    <div class="form-group"><label>District</label><input id="addressDistrict" placeholder="AURANGABAD"></div>
+                                    <div class="form-group"><label>State</label><input id="addressState" placeholder="BIHAR"></div>
+                                    <div class="form-group"><label>Country</label><input id="addressCountry" value="INDIA" placeholder="INDIA"></div>
+                                    <div class="form-group"><label>PIN Code</label><input id="addressPin" inputmode="numeric" maxlength="6" placeholder="824124"></div>
+                                </div>
+                                <textarea id="address" rows="3" hidden></textarea>
                             </div>
 
                             <div class="form-group">
@@ -2835,6 +2844,39 @@ function extractPdfLines(items){
     ).filter(Boolean);
 }
 
+function setAddressFields(value){
+    const raw=String(value||"").replace(/\r/g,"");
+    let lines=raw.split("\n").map(v=>v.trim()).filter(Boolean);
+    if(lines.length===1) lines=lines[0].split(/,(?!\s*(?:PO|PS)\s*[-:])/i).map(v=>v.trim()).filter(Boolean);
+    const fields=["addressVillage","addressPost","addressPS","addressDistrict","addressState","addressCountry","addressPin"];
+    const data={addressVillage:"",addressPost:"",addressPS:"",addressDistrict:"",addressState:"",addressCountry:"",addressPin:""};
+    const joined=lines.join(", ");
+    const pin=joined.match(/(?:PIN\s*(?:CODE)?\s*[:.-]?\s*)?(\d{6})\b/i);
+    if(pin)data.addressPin=pin[1];
+    const ps=joined.match(/\bPS\s*[-:]?\s*([^,\n]+)/i);
+    const po=joined.match(/\bPO\s*[-:]?\s*([^,\n]+)/i);
+    if(ps)data.addressPS=ps[1].trim();
+    if(po)data.addressPost=po[1].trim();
+    const cleaned=lines.filter(v=>!/^PIN\b/i.test(v)&&!/^\d{6}$/.test(v));
+    if(cleaned.length>=4){
+        data.addressVillage=cleaned[0].replace(/\b(?:PO|PS)\s*[-:].*$/i,"").trim();
+        data.addressDistrict=cleaned.find(v=>/district|aurangabad|gaya|patna|jehanabad|arwal|rohtas/i.test(v))||cleaned[cleaned.length-3]||"";
+        data.addressState=cleaned.find(v=>/\bBIHAR\b/i.test(v))||cleaned[cleaned.length-2]||"";
+        data.addressCountry=cleaned.find(v=>/\bINDIA\b/i.test(v))||"INDIA";
+    }else{
+        data.addressVillage=cleaned.filter(v=>!/^\b(?:BIHAR|INDIA)\b$/i.test(v)&&!/^\d{6}$/.test(v)).slice(0,1).join("");
+        data.addressDistrict=cleaned.find(v=>/aurangabad|gaya|patna|jehanabad|arwal|rohtas/i.test(v))||"";
+        data.addressState=cleaned.find(v=>/^BIHAR$/i.test(v))||"";
+        data.addressCountry=cleaned.find(v=>/^INDIA$/i.test(v))||"INDIA";
+    }
+    fields.forEach(id=>{const el=document.getElementById(id);if(el)el.value=data[id]||"";});
+    const hidden=document.getElementById("address");if(hidden)hidden.value=buildAddressValue();
+}
+function buildAddressValue(){
+    const get=id=>(document.getElementById(id)?.value||"").trim();
+    const village=[get("addressVillage"),get("addressPost")?("PO-"+get("addressPost")):"",get("addressPS")?("PS-"+get("addressPS")):""].filter(Boolean).join(", ");
+    return [village,get("addressDistrict"),get("addressState"),get("addressCountry"),get("addressPin")?("Pin : "+get("addressPin")):""].filter(Boolean).join("\n");
+}
 function parseCustomerPdf(text){
     const source=String(text||"").replace(/\u00a0/g," ").replace(/\r/g,"");
     const lines=source.split("\n").map(cleanPdfText).filter(Boolean);
@@ -2991,7 +3033,7 @@ async function extractCustomerPdf(){
         $("issueDate").value = data.issueDate || today();
         $("modeOfOperation").value = data.modeOfOperation || "SELF";
         $("relation").value = data.relation || "";
-        $("address").value = data.address || "";
+        setAddressFields(data.address || "");
 
         if(data.nomination){
             $("nomination").value = data.nomination;
@@ -3139,7 +3181,7 @@ async function saveCustomer(printAfter){
             `${$("fatherRelation").value || "S/O"} ${$("fatherName").value.trim()}`.trim(),
 
         address:
-            $("address").value.trim(),
+            buildAddressValue(),
 
         nomination:
             $("nomination").value,
